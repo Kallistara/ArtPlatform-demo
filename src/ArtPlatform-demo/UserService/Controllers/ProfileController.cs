@@ -54,6 +54,10 @@ namespace UserService.Controllers
             if (existingProfile != null)
                 return Conflict(new { message = "Profile already exists" }); // 409
 
+            // Проверяем, занят ли username (логин должен быть уникальным)
+            if (await _userService.UsernameExistsAsync(request.UserName))
+                return Conflict(new { message = "Username already taken" });
+
             var profile = await _userService.CreateProfileAsync(request);
             return CreatedAtAction(nameof(GetProfile), new { userId = profile.UserId }, profile); // 201
         }
@@ -66,7 +70,7 @@ namespace UserService.Controllers
         public async Task<IActionResult> UpdateProfile(string userId, [FromBody] UpdatedProfileRequest request)
         {
             // Проверка: хотя бы одно поле должно быть передано для обновления
-            if (request.DisplayName == null && request.Bio == null && request.AvatarUrl == null)
+            if (request.DisplayName == null && request.Bio == null && request.Contact == null)
             {
                 return BadRequest(new
                 {
@@ -156,7 +160,8 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Изменение  username пользователя
+        /// Изменение  username пользователя, с проверкой доступности
+        /// PATCH /api/profile/{userId}/username
         /// </summary>
         /// <param name="userId">id пользователя, для которого будет изменено имя</param>
         /// <param name="request">dto для изменения имени</param>
@@ -185,8 +190,81 @@ namespace UserService.Controllers
                     _ => BadRequest(new { message = result.Error })
                 };
             }
+        }
 
+        /// <summary>
+        /// Обновление статистики контент-креатора
+        /// PATCH /api/profile/{userId}/creator-stats
+        /// </summary>
+        [HttpPatch("{userId}/creator-stats")]
+        public async Task<IActionResult> UpdateCreatorStats(string userId, [FromBody] ContentCreatorStats stats)
+        {
+            var profile = await _userService.UpdateCreatorStatsAsync(userId, stats);
 
+            if (profile == null)
+                return NotFound(new { message = "Profile not found" });
+
+            return Ok(new
+            {
+                profile = profile,
+                message = "Creator stats updated"
+            });
+        }
+
+        /// <summary>
+        /// Обновление статистики пользователя (заказчика)
+        /// PATCH /api/profile/{userId}/user-stats
+        /// </summary>
+        [HttpPatch("{userId}/user-stats")]
+        public async Task<IActionResult> UpdateUserStats(string userId, [FromBody] UserStats stats)
+        {
+            var profile = await _userService.UpdateUserStatsAsync(userId, stats);
+
+            if (profile == null)
+                return NotFound(new { message = "Profile not found" });
+
+            return Ok(new
+            {
+                profile = profile,
+                message = "User stats updated"
+            });
+        }
+
+        /// <summary>
+        /// Обновление социальной статистики
+        /// PATCH /api/profile/{userId}/social-stats
+        /// </summary>
+        [HttpPatch("{userId}/social-stats")]
+        public async Task<IActionResult> UpdateSocialStats(string userId, [FromBody] SocialStats stats)
+        {
+            var profile = await _userService.UpdateSocialStatsAsync(userId, stats);
+
+            if (profile == null)
+                return NotFound(new { message = "Profile not found" });
+
+            return Ok(new
+            {
+                profile = profile,
+                message = "Social stats updated"
+            });
+        }
+
+        /// <summary>
+        /// Назначение пользователя контент-креатором
+        /// POST /api/profile/{userId}/make-creator
+        /// </summary>
+        [HttpPost("{userId}/make-creator")]
+        public async Task<IActionResult> MakeUserCreator(string userId)
+        {
+            var profile = await _userService.SetUserAsCreatorAsync(userId);
+            if (profile == null)
+                return NotFound(new { message = "Profile not found" });
+
+            return Ok(new
+            {
+                profile = profile,
+                message = "User is now a content creator"
+            });
         }
     }
 }

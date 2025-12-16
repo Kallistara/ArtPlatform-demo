@@ -1,3 +1,4 @@
+using Microsoft.OpenApi.Models;
 using UserService.data;
 using UserService.Services;
 

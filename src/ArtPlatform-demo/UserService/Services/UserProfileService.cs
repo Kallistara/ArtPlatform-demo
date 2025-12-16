@@ -10,7 +10,7 @@ namespace UserService.Services
     /// <summary>
     /// Реализация интерфейса IUserService бизнес-логики работы с профилями 
     /// </summary>
-    public class UserProfileService: IUserService
+    public class UserProfileService : IUserService
     {
         // Коллекция Mongo
         private readonly IMongoCollection<User> _profiles;
@@ -61,32 +61,31 @@ namespace UserService.Services
         {
             // Получем текущий профиль
             var currentProfile = await GetProfileAsync(userId);
-            if (currentProfile == null) return null;
+            
+            if (currentProfile == null) 
+                return null;
 
-            // Фильтр по UserId
+            // Фильтр по UserId и Обновление Mongo
             var filter = Builders<User>.Filter.Eq(p => p.UserId, userId);
-
-            // Обновление Mongo
             var updateBuilder = Builders<User>.Update;
             var updates = new List<UpdateDefinition<User>>();
             var hasChanges = false;
 
-            // Проверяем каждое поле на изменение
-            if (!string.IsNullOrEmpty(request.DisplayName) && request.DisplayName != currentProfile.DisplayName)
+            if (request.DisplayName != null && request.DisplayName != currentProfile.DisplayName)
             {
                 updates.Add(updateBuilder.Set(p => p.DisplayName, request.DisplayName));
                 hasChanges = true;
             }
 
-            if (!string.IsNullOrEmpty(request.Bio) && request.Bio != currentProfile.Bio)
+            if (request.Bio != null && request.Bio != currentProfile.Bio)
             {
                 updates.Add(updateBuilder.Set(p => p.Bio, request.Bio));
                 hasChanges = true;
             }
 
-            if (!string.IsNullOrEmpty(request.AvatarUrl) && request.AvatarUrl != currentProfile.AvatarUrl)
+            if (request.Contact != null)
             {
-                updates.Add(updateBuilder.Set(p => p.AvatarUrl, request.AvatarUrl));
+                updates.Add(updateBuilder.Set(p => p.Contact, request.Contact));
                 hasChanges = true;
             }
 
@@ -144,7 +143,7 @@ namespace UserService.Services
 
             var results = await _profiles
                 .Find(filter)
-                .Limit(20) 
+                .Limit(20)
                 .ToListAsync();
 
             return results;
@@ -155,7 +154,7 @@ namespace UserService.Services
         /// </summary>
         /// <param name="username">для поиска профиля</param>
         /// <returns>найденного пользователя или null</returns>
-        public async Task<User?> GetProfileByUsernameAsync (string username)
+        public async Task<User?> GetProfileByUsernameAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
                 return null;
@@ -170,7 +169,7 @@ namespace UserService.Services
         /// </summary>
         /// <param name="username">для проверки существования</param>
         /// <returns>1 - если существует, 0 если не существует</returns>
-        public async Task<bool> UsernameExistsAsync (string username)
+        public async Task<bool> UsernameExistsAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
                 return false;
@@ -186,7 +185,7 @@ namespace UserService.Services
         /// <param name="userId">id пользователя, имя которого будет меняться</param>
         /// <param name="newUsername">новое имя пользователя</param>
         /// <returns>null при ошибке + описание ошибки, измененного пользователя</returns>
-        public async Task<ChangeUsernameResult> ChangeUsernameAsync (string userId, string newUsername)
+        public async Task<ChangeUsernameResult> ChangeUsernameAsync(string userId, string newUsername)
         {
             // Получаем текущего пользователя
             var existingUser = await GetProfileAsync(userId);
@@ -238,7 +237,100 @@ namespace UserService.Services
             };
         }
 
+        /// <summary>
+        /// Обновление статистики контент-креатора
+        /// </summary>
+        /// <param name="userId">id контент-креатора для обновления статистики</param>
+        /// <param name="stats">объект статистики контент-креатора</param>
+        /// <returns></returns>
+        public async Task<User?> UpdateCreatorStatsAsync(string userId, ContentCreatorStats stats)
+        {
+            var user = await GetProfileAsync(userId);
 
-        // логика работы с авой ********************************************************************
+            if (user == null || user.CreatorStats == null)
+                return null;
+
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var update = Builders<User>.Update
+                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.CreatorStats, stats);
+
+            var options = new FindOneAndUpdateOptions<User>
+            {
+                ReturnDocument = ReturnDocument.After
+            };
+
+            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
+        }
+
+        /// <summary>
+        /// Обновление статистики пользователя
+        /// </summary>
+        /// <param name="userId">id пользователя для обновления статистики</param>
+        /// <param name="stats">объект статистики пользователя</param>
+        /// <returns></returns>
+        public async Task<User?> UpdateUserStatsAsync(string userId, UserStats stats)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var update = Builders<User>.Update
+                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.UserStats, stats);
+
+            var options = new FindOneAndUpdateOptions<User>
+            {
+                ReturnDocument = ReturnDocument.After
+            };
+
+            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
+        }
+
+        /// <summary>
+        /// Обновление социальной статистики
+        /// </summary>
+        /// <param name="userId">id пользователя для обновления статистики</param>
+        /// <param name="stats">объект социальной статистики</param>
+        /// <returns></returns>
+        public async Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var update = Builders<User>.Update
+                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.SocialStats, stats);
+
+            var options = new FindOneAndUpdateOptions<User>
+            {
+                ReturnDocument = ReturnDocument.After
+            };
+
+            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
+        }
+
+        /// <summary>
+        /// Назначение пользователя контент-креатором
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<User?> SetUserAsCreatorAsync(string userId)
+        {
+            var user = await GetProfileAsync(userId);
+
+            if (user == null)
+                return null;
+
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var update = Builders<User>.Update
+                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.CreatorStats, new ContentCreatorStats
+                {
+                    BecameCreatorDate = DateTime.UtcNow
+                });
+
+            var options = new FindOneAndUpdateOptions<User>
+            {
+                ReturnDocument = ReturnDocument.After
+            };
+
+            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
+        }
     }
 }

@@ -7,6 +7,7 @@ namespace UserService.Services
     /// </summary>
     public interface IUserService
     {
+        // ====== CRUD-операции ======
         // Получить профиль по UserId (может вернуть null)
         Task<User?> GetProfileAsync(string userId);
 
@@ -19,6 +20,8 @@ namespace UserService.Services
         // Удалить профиль
         Task<bool> DeleteProfileAsync (string userId);
 
+
+        // ====== Поиск и валидация ======
         // Поиск профилей по текстовому запросу
         Task<IEnumerable<User>> SearchProfileAsync (string query);
 
@@ -28,7 +31,21 @@ namespace UserService.Services
         // Проверка существования username
         Task<bool> UsernameExistsAsync(string username);
 
-        // Изменение username
+        // ====== Изменение имени username ======
         Task<ChangeUsernameResult> ChangeUsernameAsync(string userId, string newUsername);
+
+
+        // ====== Статистика ======
+        // Изменение данных контент-креатора
+        Task<User?> UpdateCreatorStatsAsync(string userId, ContentCreatorStats stats);
+
+        // Изменение данных пользователя
+        Task<User?> UpdateUserStatsAsync(string userId, UserStats stats);
+
+        // Изменение социальных данных 
+        Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats);
+
+        // ====== Получение роли креатора ======
+        Task<User?> SetUserAsCreatorAsync(string userId);
     }
 }
