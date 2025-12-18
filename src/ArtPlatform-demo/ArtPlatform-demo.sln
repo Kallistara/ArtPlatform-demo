@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 		docker-compose.yaml = docker-compose.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityService", "IdentityService\IdentityService.csproj", "{A1BBB850-DD41-4657-A9EC-BFE18506F074}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D93D63E6-0B63-4C79-9B7E-64A6CE8DDB89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D93D63E6-0B63-4C79-9B7E-64A6CE8DDB89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D93D63E6-0B63-4C79-9B7E-64A6CE8DDB89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1BBB850-DD41-4657-A9EC-BFE18506F074}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1BBB850-DD41-4657-A9EC-BFE18506F074}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1BBB850-DD41-4657-A9EC-BFE18506F074}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1BBB850-DD41-4657-A9EC-BFE18506F074}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

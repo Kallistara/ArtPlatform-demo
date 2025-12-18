@@ -25,6 +25,21 @@ services:
     networks:
       - artplatform-network
 
+  identity-service:
+    build:
+      context: ./IdentityService
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+    depends_on:
+      - mongo
+      - user-profile-service
+    networks:
+      - artplatform-network
+
 volumes:
   mongo-data:
 
