@@ -12,22 +12,23 @@ namespace IdentityService.Services
     {
         private readonly IMongoCollection<User> _users;
         private readonly ITokenService _tokenService;
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
+        private readonly KafkaProducerService _kafkaProducer;
+        private readonly ILogger<AuthService> _logger;
 
         /// <summary>
         /// Конструктор с внедрением зависимостей
         /// </summary>
         /// <param name="context">Контекст MongoDB</param>
         /// <param name="tokenService">Сервис работы с JWT токенами</param>
-        /// <param name="httpClient">HTTP клиент для вызова UserService</param>
-        /// <param name="configuration">Конфигурация приложения</param>
-        public AuthService(MongoDBContext context, ITokenService tokenService, HttpClient httpClient, IConfiguration configuration)
+        /// <param name="kafkaProducer"></param>
+        /// <param name="logger"></param>
+        public AuthService(MongoDBContext context, ITokenService tokenService, 
+            KafkaProducerService kafkaProducer, ILogger<AuthService> logger)
         {
             _users = context.Users;
             _tokenService = tokenService;
-            _httpClient = httpClient;
-            _configuration = configuration;
+            _kafkaProducer = kafkaProducer;
+            _logger = logger;
         }
 
         /// <summary>
@@ -55,18 +56,17 @@ namespace IdentityService.Services
                 PasswordHash = passwordHash,
                 CreatedAt = DateTime.UtcNow
             };
-
             await _users.InsertOneAsync(user);
 
-            try
+            // создаем объект сообщения для кафки и отправляем его
+            var evt = new Models.Kafka.UserRegisteredEvent
             {
-                await CreateUserProfileAsync(userId, request.Username); // Создание профиля в User Service
-            }
-            catch
-            {
-                await _users.DeleteOneAsync(u => u.UserId == userId); // откат
-                throw;
-            }
+                UserId = userId,
+                Username = request.Username,
+                CreatedAt = user.CreatedAt
+            };
+            await _kafkaProducer.ProduceAsync("user-registered", evt);
+
             return userId;
         }
 
@@ -92,36 +92,6 @@ namespace IdentityService.Services
                 UserId = user.UserId,
                 AccessToken = token
             };
-        }
-
-        /// <summary>
-        /// Внутренний метод для создания профиля пользователя в UserService.
-        /// Вызывается после успешной регистрации в IdentityService.
-        /// </summary>
-        /// <param name="userId">id пользователя для создания профиля</param>
-        /// <param name="username">имя пользователя</param>
-        private async Task CreateUserProfileAsync(string userId, string username)
-        {
-            var userServiceUrl = _configuration["UserService:BaseUrl"] ?? "http://user-profile-service:5002";
-
-            // DTO для создания профиля
-            var request = new
-            {
-                UserId = userId,
-                UserName = username,
-                DisplayName = username,
-                Bio = ""
-            };
-
-            // Синхронный POST запрос к UserService
-            var response = await _httpClient.PostAsJsonAsync($"{userServiceUrl}/api/profile", request);
-
-            // Проверка успешности запроса  
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Не удалось создать профиль: {error}");
-            }
         }
 
         /// <summary>

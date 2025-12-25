@@ -8,6 +8,9 @@ namespace UserService.Services
     public interface IUserService
     {
         // ====== CRUD-операции ======
+        // Получить все профили
+        Task<List<User>> GetAsync();
+
         // Получить профиль по UserId (может вернуть null)
         Task<User?> GetProfileAsync(string userId);
 

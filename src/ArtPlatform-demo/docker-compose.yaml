@@ -1,6 +1,33 @@
 version: '3.8'
 
 services:
+  broker:
+    image: confluentinc/confluent-local:latest
+    container_name: broker
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "8082:8082"   
+    environment:
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_NODE_ID: "1"
+      KAFKA_LISTENERS: "CONTROLLER://0.0.0.0:29093,PLAINTEXT://0.0.0.0:9092"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker:9092"
+      KAFKA_REST_BOOTSTRAP_SERVERS: "broker:9092"
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+    networks:
+      - artplatform-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8082/ || exit 1"]   
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - broker-data:/var/lib/kafka/data
+
   mongo:
     image: mongo:latest
     container_name: artplatform-mongo
@@ -20,8 +47,13 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - MongoDB__ConnectionString=mongodb://mongo:27017
+      - KAFKA_BOOTSTRAP_SERVERS=broker:9092
+      - ASPNETCORE_URLS=http://+:5002 
     depends_on:
-      - mongo
+      broker:
+        condition: service_healthy
+      mongo:
+        condition: service_started
     networks:
       - artplatform-network
 
@@ -34,14 +66,18 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - MongoDB__ConnectionString=mongodb://mongo:27017
+      - KAFKA_BOOTSTRAP_SERVERS=broker:9092
     depends_on:
-      - mongo
-      - user-profile-service
+      broker:
+        condition: service_healthy
+      mongo:
+        condition: service_started
     networks:
       - artplatform-network
 
 volumes:
   mongo-data:
+  broker-data:
 
 networks:
   artplatform-network:

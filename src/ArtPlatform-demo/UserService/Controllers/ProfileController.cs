@@ -23,6 +23,14 @@ namespace UserService.Controllers
         }
 
         /// <summary>
+        /// Получение всех профилей
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize]
+        public async Task<List<User>> Get() => await _userService.GetAsync();
+
+        /// <summary>
         /// Получение профиля по UserId
         /// GET /api/profile/{userId}
         /// </summary>
@@ -37,31 +45,6 @@ namespace UserService.Controllers
                 return NotFound(new { message = "Profile not found" }); // 404
             }
             return Ok(profile); // 200
-        }
-
-        /// <summary>
-        /// Создание нового профиля
-        /// POST /api/profile
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> CreateProfile([FromBody] CreatedProfileRequest request)
-        {
-            // Валидация обязательных полей
-            if (string.IsNullOrEmpty(request.UserId) || string.IsNullOrEmpty(request.UserName))
-                return BadRequest(new { message = "UserId and Username are required" }); // 400
-
-            // Проверка естьь ли уже такой профиль
-            var existingProfile = await _userService.GetProfileAsync(request.UserId);
-
-            if (existingProfile != null)
-                return Conflict(new { message = "Profile already exists" }); // 409
-
-            // Проверяем, занят ли username (логин должен быть уникальным)
-            if (await _userService.UsernameExistsAsync(request.UserName))
-                return Conflict(new { message = "Username already taken" });
-
-            var profile = await _userService.CreateProfileAsync(request);
-            return CreatedAtAction(nameof(GetProfile), new { userId = profile.UserId }, profile); // 201
         }
 
         /// <summary>

@@ -21,7 +21,13 @@ namespace UserService.Services
         }
 
         /// <summary>
-        /// Получения профиля пользователя с заданным userId
+        /// Получение всех профилей
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<User>> GetAsync() => await _profiles.Find(_ => true).ToListAsync();
+
+        /// <summary>
+        /// Получение профиля пользователя с заданным userId
         /// </summary>
         /// <param name="userId">для поиска профиля</param>
         /// <returns>первый объект с заданным userId или null</returns>

@@ -1,9 +1,12 @@
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
+using IdentityService.data;
+using IdentityService.Services;
+using IdentityService.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using IdentityService.data;
-using IdentityService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,6 @@ builder.Services.AddHttpClient();
 
 // JWT конфигурация 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "SUPER-SECRET-KEY-123-456-789-ABC-DEF-GHI";
-
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey); 
 
 if (keyBytes.Length < 32)
@@ -55,9 +57,34 @@ builder.Services.AddAuthentication("Bearer")
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Регистрация кафки
+builder.Services.AddSingleton<KafkaProducerService>();
+
 var app = builder.Build();
 
-// Конфигурация pipeline
+// Создание топиков 
+var bootstrap = builder.Configuration["KAFKA_BOOTSTRAP_SERVERS"]
+    ?? Environment.GetEnvironmentVariable("KAFKA_BOOTSTRAP_SERVERS") ?? "localhost:9092";
+
+var topics = new[]
+{
+    new TopicSpecification
+    {
+        Name = "user-registered",
+        NumPartitions = 1,
+        ReplicationFactor = 1
+    },
+    new TopicSpecification
+    {
+        Name = "profile-created",
+        NumPartitions = 1,
+        ReplicationFactor = 1
+    }
+};
+
+await KafkaTopicHelper.EnsureTopicsCreatedAsync(bootstrap, topics);
+
+// Настройка пайплайна обработки запросов
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

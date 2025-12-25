@@ -1,11 +1,17 @@
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using UserService.data;
 using UserService.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using UserService.Services.Kafka;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseKestrel();
+builder.WebHost.UseUrls("http://0.0.0.0:5002");
 
 // Добавляем аутентификацию JWT 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "SUPER-SECRET-KEY-123-456-789-ABC-DEF-GHI";
@@ -76,8 +82,12 @@ builder.Services.AddSwaggerGen(options =>
 // Контекст Mongo
 builder.Services.AddSingleton<MongoDBContext>();
 
-// Бизнес-сервис - новый экземпляр на каждый http
+// Регистрация бизнес-сервисов
 builder.Services.AddScoped<IUserService, UserProfileService>();
+
+// Регистрация кафки 
+builder.Services.AddHostedService<KafkaConsumerService>();
+builder.Services.AddSingleton<KafkaProducerService>();
 
 var app = builder.Build();
 
