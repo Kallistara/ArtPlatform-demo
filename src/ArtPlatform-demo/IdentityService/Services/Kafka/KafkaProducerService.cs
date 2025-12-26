@@ -1,15 +1,14 @@
 ﻿using System.Text.Json;
 using Confluent.Kafka;
 
-namespace IdentityService.Services
+namespace IdentityService.Services.Kafka
 {
     /// <summary>
-    /// Класс для создания продьюсера для отправки сооьщений в кафку
+    /// Класс для создания продьюсера для отправки сообщений в кафку
     /// </summary>
     public class KafkaProducerService
     {
         private readonly IProducer<Null, string> _producer;
-        private readonly string _bootstrapServers;
 
         /// <summary>
         /// Конструктор создающий продьюсера
@@ -18,15 +17,11 @@ namespace IdentityService.Services
         public KafkaProducerService(IConfiguration configuration)
         {
             // Адрес брокера
-            _bootstrapServers = configuration["KAFKA_BOOTSTRAP_SERVERS"]
+            var bootstrap = configuration["KAFKA_BOOTSTRAP_SERVERS"]
                 ?? Environment.GetEnvironmentVariable("KAFKA_BOOTSTRAP_SERVERS")
                 ?? "localhost:9092";
 
-            var config = new ProducerConfig
-            {
-                BootstrapServers = _bootstrapServers
-            };
-
+            var config = new ProducerConfig { BootstrapServers = bootstrap };
             _producer = new ProducerBuilder<Null, string>(config).Build();
         }
 

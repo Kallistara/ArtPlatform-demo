@@ -15,6 +15,10 @@ namespace IdentityService.Models
 
         public string Username { get; set; } = string.Empty; // имя пользователя
         public string PasswordHash { get; set; } = string.Empty; // пароль
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // дата регистрации
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // дата создания аккаунта
+
+        public bool? ProfileCreated { get; set; } = null; // Флаг создания профиля
+        public DateTime? ProfileCreatedAt { get; set; } = null; // дата создания профиля 
+        public string? ProfileCreationError { get; set; } = null; // текст ошибки
     }
 }

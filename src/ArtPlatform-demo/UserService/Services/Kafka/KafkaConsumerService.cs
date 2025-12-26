@@ -86,15 +86,68 @@ namespace UserService.Services.Kafka
                     // Проверяем есть ли такой профиль
                     var existing = await userService.GetProfileAsync(evt.UserId);
                     if (existing != null)
+                    {
+                        _logger.LogInformation("Profile already exists for UserId {UserId}", evt.UserId);
+
+                        var alreadyCreatedEvent = new ProfileCreatedEvent
+                        {
+                            EventId = Guid.NewGuid().ToString(),
+                            UserId = evt.UserId,
+                            Success = true,
+                            CreatedAt = existing.CreatedAT
+                        };
+
+                        // Отправляем сообщение, что профиль уже есть
+                        await _producer.ProduceAsync("profile-created", alreadyCreatedEvent, stoppingToken);
                         continue;
+                    }
 
                     // Создаем профиль
-                    await userService.CreateProfileAsync(new CreatedProfileRequest
+                    try
                     {
-                        UserId = evt.UserId,
-                        UserName = evt.Username,
-                        DisplayName = evt.Username
-                    });
+                        var created = await userService.CreateProfileAsync(new CreatedProfileRequest
+                        {
+                            UserId = evt.UserId,
+                            UserName = evt.Username,
+                            DisplayName = evt.Username
+                        });
+
+                        _logger.LogInformation("Profile created for UserId {UserId}", evt.UserId);
+
+                        // Отправляем событие об успешном создании
+                        var successEvent = new ProfileCreatedEvent
+                        {
+                            EventId = Guid.NewGuid().ToString(),
+                            UserId = created.UserId,
+                            Success = true,
+                            CreatedAt = created.CreatedAT
+                        };
+
+                        await _producer.ProduceAsync("profile-created", successEvent, stoppingToken);
+                    }
+                    catch (Exception exCreate)
+                    {
+                        // Логируем и отправляем событие с ошибкой
+                        _logger.LogError(exCreate, "Failed to create profile for UserId {UserId}", evt.UserId);
+
+                        var errorEvent = new ProfileCreatedEvent
+                        {
+                            EventId = Guid.NewGuid().ToString(),
+                            UserId = evt.UserId,
+                            Success = false,
+                            Error = exCreate.Message,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        try
+                        {
+                            await _producer.ProduceAsync("profile-created", errorEvent, stoppingToken);
+                        }
+                        catch (Exception exProduce)
+                        {
+                            _logger.LogError(exProduce, "Failed to publish profile-created for UserId {UserId}", evt.UserId);
+                        }
+                    }
                 }
                 catch (OperationCanceledException)
                 {

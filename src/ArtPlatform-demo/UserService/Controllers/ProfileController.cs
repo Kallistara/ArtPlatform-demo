@@ -27,7 +27,7 @@ namespace UserService.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         public async Task<List<User>> Get() => await _userService.GetAsync();
 
         /// <summary>

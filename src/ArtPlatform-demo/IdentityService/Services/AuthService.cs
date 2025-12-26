@@ -1,5 +1,6 @@
 ﻿using IdentityService.data;
 using IdentityService.Models;
+using IdentityService.Services.Kafka;
 using Microsoft.AspNetCore.Identity.Data;
 using MongoDB.Driver;
 
@@ -58,7 +59,7 @@ namespace IdentityService.Services
             };
             await _users.InsertOneAsync(user);
 
-            // создаем объект сообщения для кафки и отправляем его
+            // Создаем объект сообщения для кафки и отправляем его
             var evt = new Models.Kafka.UserRegisteredEvent
             {
                 UserId = userId,

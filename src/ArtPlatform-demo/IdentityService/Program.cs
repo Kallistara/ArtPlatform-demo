@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using IdentityService.data;
 using IdentityService.Services;
+using IdentityService.Services.Kafka;
 using IdentityService.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Регистрация кафки
 builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddHostedService<KafkaConsumerService>();
 
 var app = builder.Build();
 
