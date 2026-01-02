@@ -5,7 +5,7 @@
     /// </summary>
     public interface ITokenService
     {
-        string GenerateToken(string userId, string email); // формирование токена
+        string GenerateToken(string userId, string email, string? role = null); // формирование токена
         string? GetUserIdFromToken(string token); // получение id пользователя по токену
         bool ValidateToken(string token); // проверка токена
     }

@@ -53,8 +53,8 @@ namespace IdentityService.Services.Kafka
             using var consumer = new ConsumerBuilder<Null, string>(config).Build();
 
             // Полписываемся на топик
-            consumer.Subscribe("profile-created");
-            _logger.LogInformation("ProfileCreatedConsumer subscribed to topic: profile-created");
+            consumer.Subscribe(new[] { "profile-created", "role-changed", "user-deleted" });
+            _logger.LogInformation("ProfileCreatedConsumer subscribed to topics: profile-created, role-changed, user-deleted ");
 
             // Основной цикл обработки сообщений (ждем новое сообщение)
             while (!stoppingToken.IsCancellationRequested)
@@ -65,25 +65,67 @@ namespace IdentityService.Services.Kafka
                     var cr = consumer.Consume(stoppingToken);
                     if (cr?.Message?.Value == null) continue;
 
-                    // Десериализуем сообщение
-                    var evt = JsonSerializer.Deserialize<ProfileCreatedEvent>(cr.Message.Value);
-                    if (evt == null) continue;
+                    // Обрабатываем топик profile-created
+                    if (string.Equals(cr.Topic, "profile-created", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Десериализуем сообщение
+                        var evt = JsonSerializer.Deserialize<ProfileCreatedEvent>(cr.Message.Value);
+                        if (evt == null) continue;
 
-                    _logger.LogInformation("ProfileCreated event received for UserId {UserId} Success={Success} Error={Error}", evt.UserId, evt.Success, evt.Error);
+                        _logger.LogInformation("ProfileCreated event received for UserId {UserId} Success={Success} Error={Error}", evt.UserId, evt.Success, evt.Error);
 
-                    // Обновляем поля для объектов User в бд
-                    var filter = Builders<User>.Filter.Eq(u => u.UserId, evt.UserId);
-                    var update = evt.Success
-                        ? Builders<User>.Update
-                            .Set(u => u.ProfileCreated, true)
-                            .Set(u => u.ProfileCreatedAt, evt.CreatedAt)
-                            .Unset(u => u.ProfileCreationError) // убираем старую ошибку
-                        : Builders<User>.Update
-                            .Set(u => u.ProfileCreated, false)
-                            .Set(u => u.ProfileCreationError, evt.Error)
-                            .Set(u => u.ProfileCreatedAt, evt.CreatedAt);
+                        // Обновляем поля для объектов User в бд
+                        var filter = Builders<User>.Filter.Eq(u => u.UserId, evt.UserId);
+                        var update = evt.Success
+                            ? Builders<User>.Update
+                                .Set(u => u.ProfileCreated, true)
+                                .Set(u => u.ProfileCreatedAt, evt.CreatedAt)
+                                .Unset(u => u.ProfileCreationError)
+                            : Builders<User>.Update
+                                .Set(u => u.ProfileCreated, false)
+                                .Set(u => u.ProfileCreationError, evt.Error)
+                                .Set(u => u.ProfileCreatedAt, evt.CreatedAt);
 
-                    await _db.Users.UpdateOneAsync(filter, update);
+                        await _db.Users.UpdateOneAsync(filter, update);
+                    }
+                    // Обрабатываем топик role-changed
+                    else if (string.Equals(cr.Topic, "role-changed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Десериализуем сообщение
+                        var evt = JsonSerializer.Deserialize<RoleChangedEvent>(cr.Message.Value);
+                        if (evt == null) continue;
+
+                        _logger.LogInformation("RoleChanged event received for UserId {UserId} Role={Role}", evt.UserId, evt.Role);
+
+                        // Обновляем поля, связанные с ролью
+                        var filter = Builders<User>.Filter.Eq(u => u.UserId, evt.UserId);
+                        var update = Builders<User>.Update
+                            .Set(u => u.Role, evt.Role)
+                            .Set(u => u.ProfileCreatedAt, evt.AssignedAt); 
+
+                        await _db.Users.UpdateOneAsync(filter, update);
+                    }
+                    else if (string.Equals(cr.Topic, "user-deleted", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Десериализуем сообщение
+                        var evt = JsonSerializer.Deserialize<UserDeletedEvent>(cr.Message.Value);
+                        if (evt == null) continue;
+
+                        _logger.LogInformation("UserDeleted event received for UserId {UserId}. Removing identity record.", evt.UserId);
+
+                        // Удаляем запись пользователя из коллекции
+                        var filter = Builders<User>.Filter.Eq(u => u.UserId, evt.UserId);
+                        var res = await _db.Users.DeleteOneAsync(filter);
+
+                        if (res.DeletedCount > 0)
+                        {
+                            _logger.LogInformation("Identity record deleted for UserId {UserId}", evt.UserId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No identity record found to delete for UserId {UserId}", evt.UserId);
+                        }
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -91,10 +133,12 @@ namespace IdentityService.Services.Kafka
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while consuming profile-created");
+                    _logger.LogError(ex, "Error while consuming messages");
                 }
             }
+
             consumer.Close();
         }
     }
 }
+

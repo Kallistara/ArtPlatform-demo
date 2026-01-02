@@ -11,14 +11,29 @@ namespace IdentityService.Models
         [BsonId]
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
-        public string UserId { get; set; } = string.Empty; // Внешний ID
+        // Внешний ID
+        public string UserId { get; set; } = string.Empty;
 
-        public string Username { get; set; } = string.Empty; // имя пользователя
-        public string PasswordHash { get; set; } = string.Empty; // пароль
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // дата создания аккаунта
+        // Имя пользователя (логин)
+        public string Username { get; set; } = string.Empty;
 
-        public bool? ProfileCreated { get; set; } = null; // Флаг создания профиля
-        public DateTime? ProfileCreatedAt { get; set; } = null; // дата создания профиля 
-        public string? ProfileCreationError { get; set; } = null; // текст ошибки
+        // Пароль
+        public string PasswordHash { get; set; } = string.Empty;
+
+        // Дата создания аккаунта
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
+
+        // Роль пользователя 
+        [BsonRepresentation(BsonType.String)]
+        public string? Role { get; set; } = null;
+
+        // Флаг создания профиля
+        public bool? ProfileCreated { get; set; } = null;
+
+        // Дата создания профиля 
+        public DateTime? ProfileCreatedAt { get; set; } = null;
+
+        // Текст ошибки
+        public string? ProfileCreationError { get; set; } = null; 
     }
 }

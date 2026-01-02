@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -32,13 +33,18 @@ namespace IdentityService.Services
         /// <param name="userId">Идентификатор пользователя</param>
         /// <param name="username">Имя пользователя</param>
         /// <returns>Строка с JWT токеном</returns>
-        public string GenerateToken(string userId, string username)
+        public string GenerateToken(string userId, string username, string? role = null)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim("sub", userId),
                 new Claim("username", username)
             };
+
+            if (!string.IsNullOrWhiteSpace(role))
+            { 
+              claims.Add(new Claim(ClaimTypes.Role, role)); 
+            }
 
             var credentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
 

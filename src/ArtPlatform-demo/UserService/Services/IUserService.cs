@@ -34,6 +34,7 @@ namespace UserService.Services
         // Проверка существования username
         Task<bool> UsernameExistsAsync(string username);
 
+
         // ====== Изменение имени username ======
         Task<ChangeUsernameResult> ChangeUsernameAsync(string userId, string newUsername);
 
@@ -48,7 +49,7 @@ namespace UserService.Services
         // Изменение социальных данных 
         Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats);
 
-        // ====== Получение роли креатора ======
-        Task<User?> SetUserAsCreatorAsync(string userId);
+
+        Task<User?> UpdateRoleAsync(string userId, UserRole role);
     }
 }

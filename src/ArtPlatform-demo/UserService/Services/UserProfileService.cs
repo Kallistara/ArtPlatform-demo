@@ -3,6 +3,8 @@ using MongoDB.Driver.Linq;
 using System.ComponentModel;
 using UserService.data;
 using UserService.Models;
+using UserService.Models.Kafka;
+using UserService.Services.Kafka;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UserService.Services
@@ -14,27 +16,35 @@ namespace UserService.Services
     {
         // Коллекция Mongo
         private readonly IMongoCollection<User> _profiles;
+        private readonly KafkaProducerService _producer;
+        private readonly ILogger<UserProfileService> _logger;
 
-        public UserProfileService(MongoDBContext context)
+        /// <summary>
+        /// Конструктор
+        /// </summary>
+        /// <param name="context">бд</param>
+        /// <param name="producer">продьюсер</param>
+        /// <param name="logger">логирование</param>
+        public UserProfileService(MongoDBContext context, KafkaProducerService producer, ILogger<UserProfileService> logger)
         {
             _profiles = context.Profiles;
+            _producer = producer;
+            _logger = logger;
         }
 
         /// <summary>
         /// Получение всех профилей
         /// </summary>
-        /// <returns></returns>
+        /// <returns>список объектов User</returns>
         public async Task<List<User>> GetAsync() => await _profiles.Find(_ => true).ToListAsync();
 
         /// <summary>
         /// Получение профиля пользователя с заданным userId
         /// </summary>
-        /// <param name="userId">для поиска профиля</param>
+        /// <param name="userId">идентификатор для поиска профиля</param>
         /// <returns>первый объект с заданным userId или null</returns>
-        public async Task<User?> GetProfileAsync(string userId)
-        {
-            return await _profiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
-        }
+        public async Task<User?> GetProfileAsync(string userId) =>
+             await _profiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
 
         /// <summary>
         /// Создание нового профиля пользователя в коллекции
@@ -49,8 +59,9 @@ namespace UserService.Services
                 UserName = request.UserName,
                 DisplayName = request.DisplayName,
                 Bio = request.Bio,
-                CreatedAT = DateTime.UtcNow,
-                UpdatedAT = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                Role = UserRole.Unauthorized
             };
 
             await _profiles.InsertOneAsync(user);
@@ -98,7 +109,7 @@ namespace UserService.Services
             // Если были изменения - обновляем
             if (hasChanges)
             {
-                updates.Add(updateBuilder.Set(p => p.UpdatedAT, DateTime.UtcNow));
+                updates.Add(updateBuilder.Set(p => p.UpdatedAt, DateTime.UtcNow));
 
                 var combinedUpdate = updateBuilder.Combine(updates);
                 var options = new FindOneAndUpdateOptions<User>
@@ -122,9 +133,37 @@ namespace UserService.Services
         {
             // Фильтр по UserId
             var filter = Builders<User>.Filter.Eq(p => p.UserId, userId);
+
+            // Получаем профиль
+            var existing = await _profiles.Find(filter).FirstOrDefaultAsync();
+            if (existing == null)
+                return false;
+
+            // Удаляем из бд
             var result = await _profiles.DeleteOneAsync(filter);
 
-            return result.DeletedCount > 0;
+            if (result.DeletedCount > 0)
+            {
+                // Публикуем событие user-deleted
+                try
+                {
+                    var evt = new UserDeletedEvent
+                    {
+                        EventId = Guid.NewGuid().ToString(),
+                        UserId = userId,
+                        Username = existing.UserName,
+                        DeletedAt = DateTime.UtcNow
+                    };
+                    await _producer.ProduceAsync("user-deleted", evt);
+                    _logger.LogInformation("Published user-deleted for UserId {UserId}", userId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to publish user-deleted for UserId {UserId}", userId);
+                }
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -147,12 +186,7 @@ namespace UserService.Services
                     new MongoDB.Bson.BsonRegularExpression(query, "i"))
             );
 
-            var results = await _profiles
-                .Find(filter)
-                .Limit(20)
-                .ToListAsync();
-
-            return results;
+            return await _profiles.Find(filter).Limit(20).ToListAsync();
         }
 
         /// <summary>
@@ -165,9 +199,7 @@ namespace UserService.Services
             if (string.IsNullOrWhiteSpace(username))
                 return null;
 
-            return await _profiles
-                .Find(p => p.UserName == username)
-                .FirstOrDefaultAsync();
+            return await _profiles.Find(p => p.UserName == username).FirstOrDefaultAsync();
         }
 
         /// <summary>
@@ -180,9 +212,7 @@ namespace UserService.Services
             if (string.IsNullOrWhiteSpace(username))
                 return false;
 
-            return await _profiles
-                .Find(p => p.UserName == username)
-                .AnyAsync();
+            return await _profiles.Find(p => p.UserName == username).AnyAsync();
         }
 
         /// <summary>
@@ -226,7 +256,7 @@ namespace UserService.Services
             var filter = Builders<User>.Filter.Eq(p => p.UserId, userId);
             var update = Builders<User>.Update
                 .Set(p => p.UserName, newUsername)
-                .Set(p => p.UpdatedAT, DateTime.UtcNow);
+                .Set(p => p.UpdatedAt, DateTime.UtcNow);
 
             var options = new FindOneAndUpdateOptions<User>
             {
@@ -248,17 +278,15 @@ namespace UserService.Services
         /// </summary>
         /// <param name="userId">id контент-креатора для обновления статистики</param>
         /// <param name="stats">объект статистики контент-креатора</param>
-        /// <returns></returns>
+        /// <returns>обновленный объект</returns>
         public async Task<User?> UpdateCreatorStatsAsync(string userId, ContentCreatorStats stats)
         {
             var user = await GetProfileAsync(userId);
-
-            if (user == null || user.CreatorStats == null)
-                return null;
+            if (user == null) return null;
 
             var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
             var update = Builders<User>.Update
-                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow)
                 .Set(u => u.CreatorStats, stats);
 
             var options = new FindOneAndUpdateOptions<User>
@@ -274,12 +302,15 @@ namespace UserService.Services
         /// </summary>
         /// <param name="userId">id пользователя для обновления статистики</param>
         /// <param name="stats">объект статистики пользователя</param>
-        /// <returns></returns>
+        /// <returns>обновленный объект</returns>
         public async Task<User?> UpdateUserStatsAsync(string userId, UserStats stats)
         {
+            var user = await GetProfileAsync(userId);
+            if (user == null) return null;
+
             var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
             var update = Builders<User>.Update
-                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow)
                 .Set(u => u.UserStats, stats);
 
             var options = new FindOneAndUpdateOptions<User>
@@ -295,12 +326,15 @@ namespace UserService.Services
         /// </summary>
         /// <param name="userId">id пользователя для обновления статистики</param>
         /// <param name="stats">объект социальной статистики</param>
-        /// <returns></returns>
+        /// <returns>обновленный объект</returns>
         public async Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats)
         {
+            var user = await GetProfileAsync(userId);
+            if (user == null) return null;
+
             var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
             var update = Builders<User>.Update
-                .Set(u => u.UpdatedAT, DateTime.UtcNow)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow)
                 .Set(u => u.SocialStats, stats);
 
             var options = new FindOneAndUpdateOptions<User>
@@ -312,28 +346,21 @@ namespace UserService.Services
         }
 
         /// <summary>
-        /// Назначение пользователя контент-креатором
+        /// Обновление роли
         /// </summary>
         /// <param name="userId"></param>
-        /// <returns></returns>
-        public async Task<User?> SetUserAsCreatorAsync(string userId)
+        /// <param name="role"></param>
+        /// <returns>обновленный объект</returns>
+        public async Task<User?> UpdateRoleAsync(string userId, UserRole role)
         {
-            var user = await GetProfileAsync(userId);
-
-            if (user == null)
-                return null;
-
             var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
             var update = Builders<User>.Update
-                .Set(u => u.UpdatedAT, DateTime.UtcNow)
-                .Set(u => u.CreatorStats, new ContentCreatorStats
-                {
-                    BecameCreatorDate = DateTime.UtcNow
-                });
+                .Set(u => u.Role, role)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow);
 
-            var options = new FindOneAndUpdateOptions<User>
-            {
-                ReturnDocument = ReturnDocument.After
+            var options = new FindOneAndUpdateOptions<User> 
+            { 
+                ReturnDocument = ReturnDocument.After, IsUpsert = false 
             };
 
             return await _profiles.FindOneAndUpdateAsync(filter, update, options);

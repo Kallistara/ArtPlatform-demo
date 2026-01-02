@@ -11,10 +11,9 @@ namespace IdentityService.Services
     /// </summary>
     public class AuthService:IAuthService
     {
-        private readonly IMongoCollection<User> _users;
-        private readonly ITokenService _tokenService;
-        private readonly KafkaProducerService _kafkaProducer;
-        private readonly ILogger<AuthService> _logger;
+        private readonly IMongoCollection<User> _users; // коллекция пользователей
+        private readonly ITokenService _tokenService; // бизнес-сервис работы с токенами
+        private readonly KafkaProducerService _kafkaProducer; // продьюсер
 
         /// <summary>
         /// Конструктор с внедрением зависимостей
@@ -24,12 +23,11 @@ namespace IdentityService.Services
         /// <param name="kafkaProducer"></param>
         /// <param name="logger"></param>
         public AuthService(MongoDBContext context, ITokenService tokenService, 
-            KafkaProducerService kafkaProducer, ILogger<AuthService> logger)
+            KafkaProducerService kafkaProducer)
         {
             _users = context.Users;
             _tokenService = tokenService;
             _kafkaProducer = kafkaProducer;
-            _logger = logger;
         }
 
         /// <summary>
@@ -80,40 +78,20 @@ namespace IdentityService.Services
         {
             // Поиск пользователя
             var user = await _users.Find(u => u.Username == request.Username).FirstOrDefaultAsync();
-            if (user == null) return null;
+            if (user == null) 
+                return null;
 
             // Проверка пароля
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) return null;
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) 
+                return null;
 
             // Генерация токена
-            var token = _tokenService.GenerateToken(user.UserId, user.Username);
+            var token = _tokenService.GenerateToken(user.UserId, user.Username, user.Role);
 
             return new AuthResponse
             {
                 UserId = user.UserId,
                 AccessToken = token
-            };
-        }
-
-        /// <summary>
-        /// Получение информации о пользователе по UserId
-        /// </summary>
-        /// <param name="userId">Идентификатор пользователя</param>
-        /// <returns>Информация о пользователе</returns>
-        public async Task<UserInfoResponse?> GetUserByIdAsync(string userId)
-        {
-            var user = await _users
-                .Find(u => u.UserId == userId)
-                .FirstOrDefaultAsync();
-
-            if (user == null)
-                return null;
-
-            return new UserInfoResponse
-            {
-                UserId = user.UserId,
-                Username = user.Username,
-                CreatedAt = user.CreatedAt
             };
         }
 
@@ -140,5 +118,30 @@ namespace IdentityService.Services
 
             return result.ModifiedCount > 0;
         }
+
+
+        //--------------------------------------------------------------------------------------------
+        /// <summary>
+        /// Получение информации о пользователе по UserId
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <returns>Информация о пользователе</returns>
+        public async Task<UserInfoResponse?> GetUserByIdAsync(string userId)
+        {
+            var user = await _users
+                .Find(u => u.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return null;
+
+            return new UserInfoResponse
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
     }
 }

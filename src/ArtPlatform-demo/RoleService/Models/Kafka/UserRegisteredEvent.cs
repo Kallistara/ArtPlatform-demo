@@ -1,23 +1,20 @@
-﻿namespace IdentityService.Models.Kafka
+﻿namespace RoleService.Models.Kafka
 {
     /// <summary>
     /// Модель события создания профиля
     /// </summary>
-    public class ProfileCreatedEvent
+    public class UserRegisteredEvent
     {
-        // Идентификатор события
-        public string EventId { get; set; } = string.Empty;
+        // id
+        public string EventId { get; set; } = Guid.NewGuid().ToString();
 
         // Идентификатор пользователя
         public string UserId { get; set; } = string.Empty;
 
-        // Флаг успеха
-        public bool Success { get; set; }
+        // Имя пользователя (логин)
+        public string Username { get; set; } = string.Empty;
 
         // Дата создания
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // Ошибка
-        public string? Error { get; set; }
     }
 }

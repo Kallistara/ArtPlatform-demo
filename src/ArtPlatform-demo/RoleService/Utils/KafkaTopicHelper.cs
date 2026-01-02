@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 
-namespace IdentityService.Utils
+namespace RoleService.Utils
 {
     /// <summary>
     /// Утилита для создания топиков кафки

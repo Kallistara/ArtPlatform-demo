@@ -1,17 +1,13 @@
-using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using RoleService.data;
+using RoleService.Services;
+using RoleService.Services.Kafka;
+using RoleService.Utils;
 using System.Text;
-using UserService.data;
-using UserService.Services;
-using UserService.Services.Kafka;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.WebHost.UseKestrel();
-builder.WebHost.UseUrls("http://0.0.0.0:5002");
 
 // Добавляем аутентификацию JWT 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "SUPER-SECRET-KEY-123-456-789-ABC-DEF-GHI";
@@ -44,13 +40,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
-// === Регистрация сервисов в DI контейнере ===
-
-// контроллеры 
+// Регистрация сервисов
 builder.Services.AddControllers();
-
-// Документация Swagger 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Поддержка авторизации - ввода токенов
 builder.Services.AddSwaggerGen(options =>
@@ -80,17 +73,26 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Контекст Mongo
+// Регистрация монго и бизнес-сервисов
 builder.Services.AddSingleton<MongoDBContext>();
+builder.Services.AddScoped<IRolesService, RolesService>();
 
-// Регистрация бизнес-сервисов
-builder.Services.AddScoped<IUserService, UserProfileService>();
-
-// Регистрация кафки 
-builder.Services.AddHostedService<KafkaConsumerService>();
+// Регистрация кафки
 builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddHostedService<KafkaConsumerService>();
 
 var app = builder.Build();
+
+// Создание топиков
+var bootstrap = builder.Configuration["KAFKA_BOOTSTRAP_SERVERS"]
+    ?? Environment.GetEnvironmentVariable("KAFKA_BOOTSTRAP_SERVERS")
+    ?? "localhost:9092";
+
+var topics = new[]
+{
+    new TopicSpecification { Name = "role-changed", NumPartitions = 1, ReplicationFactor = 1 }
+};
+await KafkaTopicHelper.EnsureTopicsCreatedAsync(bootstrap, topics);
 
 // Настройка пайплайна обработки запросов
 if (app.Environment.IsDevelopment())
@@ -99,9 +101,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Регистрация контроллеров
-app.UseAuthentication(); 
-app.UseAuthorization();  
-app.MapControllers();
+//app.UseAuthorization();
 
+app.MapControllers();
 app.Run();

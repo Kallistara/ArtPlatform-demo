@@ -1,19 +1,19 @@
 ﻿using Confluent.Kafka;
 using System.Text.Json;
 
-namespace UserService.Services.Kafka
+namespace RoleService.Services.Kafka
 {
     /// <summary>
-    /// Класс для создания продьюсера для отправки сообщений в кафку
+    /// Сервис для отправки сообщений кафка
     /// </summary>
-    public class KafkaProducerService
+    public class KafkaProducerService : IDisposable
     {
         private readonly IProducer<Null, string> _producer;
 
         /// <summary>
-        /// Конструктор создающий продьюсера
+        /// Конструктор
         /// </summary>
-        /// <param name="configuration">конфигурация</param>
+        /// <param name="configuration"><конфигурация/param>
         public KafkaProducerService(IConfiguration configuration)
         {
             // Адрес брокера
@@ -30,7 +30,8 @@ namespace UserService.Services.Kafka
         /// </summary>
         /// <param name="topic">топик</param>
         /// <param name="message">сообщение</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">токен асинхронных задач</param>
+        /// <returns></returns>
         public async Task ProduceAsync<T>(string topic, T message, CancellationToken cancellationToken = default)
         {
             var json = JsonSerializer.Serialize(message);
@@ -41,9 +42,7 @@ namespace UserService.Services.Kafka
         /// <summary>
         /// Метод, освобождающий ресурсы
         /// </summary>
-        public void Dispose()
-        {
-            _producer?.Dispose();
-        }
+        public void Dispose() => _producer?.Dispose();
     }
+
 }

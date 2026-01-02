@@ -5,10 +5,13 @@
     /// </summary>
     public class UserStats
     {
-        public int PublishedOrdersCount { get; set; } = 0; // Количество опубликованных заказов
+        // Количество опубликованных заказов
+        public int PublishedOrdersCount { get; set; } = 0;
 
-        public int PurchasedProductsCount { get; set; } = 0; // Количество купленных товаров
+        // Количество купленных товаров
+        public int PurchasedProductsCount { get; set; } = 0;
 
-        public int ActiveOrdersCount { get; set; } = 0; // Количество активных заказов
+        // Количество активных заказов
+        public int ActiveOrdersCount { get; set; } = 0; 
     }
 }

@@ -7,7 +7,7 @@ using UserService.Services;
 namespace UserService.Controllers
 {
     /// <summary>
-    /// API контроллер для управления профилями пользователей
+    /// API контроллер для управления профилями пользователей.
     /// Базовый маршрут: /api/profile
     /// </summary>
     [Route("api/[controller]")]
@@ -17,21 +17,25 @@ namespace UserService.Controllers
         // Dependency Injection бизнес-логики (сервиса)
         private readonly IUserService _userService;
 
+        /// <summary>
+        /// Конструктор с внедрением зависимости IUserService.
+        /// </summary>
+        /// <param name="userService">Сервис управления профилями</param>
         public ProfileController(IUserService userService)
         {
             _userService = userService;
         }
 
         /// <summary>
-        /// Получение всех профилей
+        /// Получение списка всех профилей.
+        /// GET /api/profile
         /// </summary>
-        /// <returns></returns>
         [HttpGet]
-        //[Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<List<User>> Get() => await _userService.GetAsync();
 
         /// <summary>
-        /// Получение профиля по UserId
+        /// Получение профиля по UserId.
         /// GET /api/profile/{userId}
         /// </summary>
         [HttpGet("{userId}")]
@@ -48,20 +52,17 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Обновление существующего профиля
+        /// Обновление существующего профиля.
         /// PUT /api/profile/{userId}
         /// </summary>
         [HttpPut("{userId}")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(string userId, [FromBody] UpdatedProfileRequest request)
         {
-            // Проверка: хотя бы одно поле должно быть передано для обновления
+            // Хотя бы одно поле должно быть не null
             if (request.DisplayName == null && request.Bio == null && request.Contact == null)
             {
-                return BadRequest(new
-                {
-                    message = "At least one field (DisplayName, Bio, or AvatarUrl) must be provided"
-                });
+                return BadRequest(new { message = "At least one field (DisplayName, Bio, or Contact) must be provided" });
             }
 
             var profile = await _userService.UpdateProfileAsync(userId, request);
@@ -72,14 +73,14 @@ namespace UserService.Controllers
             return Ok(new
             {
                 profile = profile,
-                message = profile.UpdatedAT > DateTime.UtcNow.AddSeconds(-1)
-                ? "Profile updated successfully"
-                : "No changes detected"
+                message = profile.UpdatedAt > DateTime.UtcNow.AddSeconds(-1)
+                    ? "Profile updated successfully"
+                    : "No changes detected"
             });
         }
 
         /// <summary>
-        /// Удаление профиля
+        /// Удаление профиля.
         /// DELETE /api/profile/{userId}
         /// </summary>
         [HttpDelete("{userId}")]
@@ -95,7 +96,7 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Поиск профилей по текстовому запросу
+        /// Поиск профилей по текстовому запросу.
         /// GET /api/profile/search?query=...
         /// </summary>
         [HttpGet("search")]
@@ -110,9 +111,9 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Проверка доступности username
+        /// Проверка доступности username.
+        /// GET /api/profile/check-username/{username}
         /// </summary>
-        /// <param name="username">для котрого проверяется доступность</param>
         [HttpGet("check-username/{username}")]
         [AllowAnonymous]
         public async Task<IActionResult> CheckUsernameAvailability(string username)
@@ -130,8 +131,9 @@ namespace UserService.Controllers
             });
         }
 
+        // -------------------------------------------------------------------------------------------------
         /// <summary>
-        /// Получение профиля по username
+        /// Получение профиля по username.
         /// </summary>
         /// <param name="username">для которого необходимо найти профиль</param>
         [HttpGet("by-username/{username}")]
@@ -150,11 +152,9 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Изменение  username пользователя, с проверкой доступности
+        /// Изменение username пользователя, с проверкой доступности.
         /// PATCH /api/profile/{userId}/username
         /// </summary>
-        /// <param name="userId">id пользователя, для которого будет изменено имя</param>
-        /// <param name="request">dto для изменения имени</param>
         [HttpPatch("{userId}/username")]
         [Authorize]
         public async Task<IActionResult> ChangeUsername(string userId, [FromBody] ChangeUsernameRequest request)
@@ -184,11 +184,11 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Обновление статистики контент-креатора
+        /// Обновление статистики контент-креатора.
         /// PATCH /api/profile/{userId}/creator-stats
         /// </summary>
         [HttpPatch("{userId}/creator-stats")]
-        [Authorize]
+        [Authorize(Roles = "ContentCreator")]
         public async Task<IActionResult> UpdateCreatorStats(string userId, [FromBody] ContentCreatorStats stats)
         {
             var profile = await _userService.UpdateCreatorStatsAsync(userId, stats);
@@ -204,7 +204,7 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Обновление статистики пользователя (заказчика)
+        /// Обновление статистики пользователя (заказчика).
         /// PATCH /api/profile/{userId}/user-stats
         /// </summary>
         [HttpPatch("{userId}/user-stats")]
@@ -224,7 +224,7 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Обновление социальной статистики
+        /// Обновление социальной статистики.
         /// PATCH /api/profile/{userId}/social-stats
         /// </summary>
         [HttpPatch("{userId}/social-stats")]
@@ -244,29 +244,10 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Назначение пользователя контент-креатором
-        /// POST /api/profile/{userId}/make-creator
-        /// </summary>
-        [HttpPost("{userId}/make-creator")]
-        [Authorize]
-        public async Task<IActionResult> MakeUserCreator(string userId)
-        {
-            var profile = await _userService.SetUserAsCreatorAsync(userId);
-            if (profile == null)
-                return NotFound(new { message = "Profile not found" });
-
-            return Ok(new
-            {
-                profile = profile,
-                message = "User is now a content creator"
-            });
-        }
-
-
-        /// <summary>
-        /// Получение userId из заголовка
+        /// Получение userId из заголовка.
         /// </summary>
         [HttpGet("me")]
+        [Authorize]
         public async Task<IActionResult> GetMyProfile([FromHeader(Name = "X-User-Id")] string userId)
         {
             var profile = await _userService.GetProfileAsync(userId);

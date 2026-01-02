@@ -5,8 +5,10 @@
     /// </summary>
     public class SocialStats
     {
-        public int FollowersCount { get; set; } = 0; // Количество подписчиков
+        // Количество подписчиков
+        public int FollowersCount { get; set; } = 0;
 
-        public int FollowingCount { get; set; } = 0; // Количество подписок
+        // Количество подписок
+        public int FollowingCount { get; set; } = 0; 
     }
 }

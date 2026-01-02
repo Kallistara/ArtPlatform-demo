@@ -75,6 +75,25 @@ services:
     networks:
       - artplatform-network
 
+  role-service:
+    build:
+      context: ./RoleService
+      dockerfile: Dockerfile
+    ports:
+      - "5003:5003"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+      - KAFKA_BOOTSTRAP_SERVERS=broker:9092
+      - INITIAL_ADMIN_USERID=00000000-0000-0000-0000-000000000000
+    depends_on:
+      broker:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    networks:
+      - artplatform-network
+
 volumes:
   mongo-data:
   broker-data:

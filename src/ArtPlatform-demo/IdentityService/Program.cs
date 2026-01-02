@@ -7,6 +7,7 @@ using IdentityService.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,7 +51,9 @@ builder.Services.AddAuthentication("Bearer")
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "identity-service",
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "art-platform",
-            IssuerSigningKey = key
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.Zero,
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role // RoleClaimType для ролей
         };
     });
 
@@ -70,21 +73,26 @@ var bootstrap = builder.Configuration["KAFKA_BOOTSTRAP_SERVERS"]
 
 var topics = new[]
 {
-    new TopicSpecification
-    {
-        Name = "user-registered",
-        NumPartitions = 1,
-        ReplicationFactor = 1
-    },
-    new TopicSpecification
-    {
-        Name = "profile-created",
-        NumPartitions = 1,
-        ReplicationFactor = 1
-    }
+    new TopicSpecification { Name = "user-registered", NumPartitions = 1, ReplicationFactor = 1 },
+    new TopicSpecification { Name = "profile-created", NumPartitions = 1, ReplicationFactor = 1 },
+    new TopicSpecification { Name = "user-deleted", NumPartitions = 1, ReplicationFactor = 1 } 
 };
-
 await KafkaTopicHelper.EnsureTopicsCreatedAsync(bootstrap, topics);
+
+// Создание дефолтного админа
+var adminUserId = app.Configuration["INITIAL_ADMIN_USERID"]
+    ?? Environment.GetEnvironmentVariable("INITIAL_ADMIN_USERID")
+    ?? "00000000-0000-0000-0000-000000000000";
+
+var adminUsername = app.Configuration["INITIAL_ADMIN_USERNAME"]
+    ?? Environment.GetEnvironmentVariable("INITIAL_ADMIN_USERNAME")
+    ?? "admin";
+
+var adminPassword = app.Configuration["INITIAL_ADMIN_PASSWORD"]
+    ?? Environment.GetEnvironmentVariable("INITIAL_ADMIN_PASSWORD")
+    ?? "admin11";
+
+await IdentityService.Utils.DefaultAdminCreator.EnsureAsync(app.Services, adminUserId, adminUsername, adminPassword);
 
 // Настройка пайплайна обработки запросов
 if (app.Environment.IsDevelopment())

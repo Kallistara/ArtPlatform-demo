@@ -5,17 +5,23 @@
     /// </summary>
     public class ContentCreatorStats
     {
-        public int ProductsCount { get; set; } = 0; // Количество товаров
+        // Количество товаров
+        public int ProductsCount { get; set; } = 0;
 
-        public int ProductsSoldCount { get; set; } = 0; // Количество проданных товаров
+        // Количество проданных товаров
+        public int ProductsSoldCount { get; set; } = 0;
 
-        public int ProjectsCount { get; set; } = 0; // Количество проектов
+        // Количество проектов
+        public int ProjectsCount { get; set; } = 0;
 
-        public int OrdersCompletedCount { get; set; } = 0; // Количество выполненных заказов
+        // Количество выполненных заказов
+        public int OrdersCompletedCount { get; set; } = 0;
 
-        public double AverageRating { get; set; } = 0; // Средний рейтинг
+        // Средний рейтинг
+        public double AverageRating { get; set; } = 0;
 
-        public DateTime? BecameCreatorDate { get; set; } // Дата получение роли креатора
+        // Дата получение роли креатора
+        public DateTime? BecameCreatorDate { get; set; } 
 
         //public List<string> Specializations { get; set; } = new();
     }

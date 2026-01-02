@@ -1,7 +1,7 @@
-﻿using IdentityService.Models;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
+using RoleService.Models;
 
-namespace IdentityService.data
+namespace RoleService.data
 {
     /// <summary>
     /// Контекст подключения к MongoDB
@@ -23,11 +23,24 @@ namespace IdentityService.data
             // Создание клиента MongoDB
             var client = new MongoClient(connectionString);
             _database = client.GetDatabase(databaseName);
+
+            // Создание индексов при инициализации
+            CreateIndexes();
         }
 
         /// <summary>
-        /// Доступ к коллекции пользователей
+        /// Доступ к коллекции ролей пользователей
         /// </summary>
-        public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+        public IMongoCollection<UserRoleEntry> Roles => _database.GetCollection<UserRoleEntry>("Roles");
+
+        /// <summary>
+        /// Создание индексов для коллекции ролей пользователей
+        /// </summary>
+        private void CreateIndexes()
+        {
+            var roles = Roles;
+            var userIdIndex = Builders<UserRoleEntry>.IndexKeys.Ascending(r => r.UserId);
+            roles.Indexes.CreateOne(new CreateIndexModel<UserRoleEntry>(userIdIndex, new CreateIndexOptions { Unique = true }));
+        }
     }
 }

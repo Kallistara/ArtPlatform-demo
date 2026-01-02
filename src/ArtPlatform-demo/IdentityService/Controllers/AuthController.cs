@@ -50,9 +50,10 @@ namespace IdentityService.Controllers
         /// <summary>
         /// Вход существующего пользователя.
         /// POST /api/auth/login
+        /// POST /api/auth/login
         /// </summary>
         /// <param name="request">Учетные данные</param>
-        /// <returns>JWT токен для доступа или ошибку</returns>
+        /// <returns>JWT токен для доступа или ошибка</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Models.LoginRequest request)
         {
@@ -66,6 +67,7 @@ namespace IdentityService.Controllers
 
         /// <summary>
         /// Сброс и смена пароля
+        /// POST /api/auth/reset-password
         /// </summary>
         /// <param name="request">данные для смены пароля</param>
         [HttpPost("reset-password")]

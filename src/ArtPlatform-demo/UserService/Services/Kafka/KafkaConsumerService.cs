@@ -10,7 +10,7 @@ using UserService.Models.Kafka;
 namespace UserService.Services.Kafka
 {
     /// <summary>
-    /// Класс, создающий консамера для потребления сообщений из кафки (работает в фоновом режиме)
+    /// Сервис, создающий консамера для потребления сообщений из кафки (работает в фоновом режиме)
     /// </summary>
     public class KafkaConsumerService : BackgroundService
     {
@@ -19,7 +19,6 @@ namespace UserService.Services.Kafka
         private readonly IServiceScopeFactory _scopeFactory; // Фабрика для создания служб (внедрение зависимостей)
         private readonly KafkaProducerService _producer; // Продьюсер
         private readonly ILogger<KafkaConsumerService> _logger; // Логирование
-        private IConsumer<Null, string>? _consumer; // Консамер
 
         /// <summary>
         /// Конструктор
@@ -59,10 +58,10 @@ namespace UserService.Services.Kafka
             };
             using var consumer = new ConsumerBuilder<Null, string>(config).Build();
 
-            // Подписываемся на топик
-            consumer.Subscribe("user-registered");
+            // Подписываемся на топики
+            consumer.Subscribe(new[] { "user-registered", "role-changed" });
 
-            _logger.LogInformation("Kafka consumer started and subscribed to topic: user-registered");
+            _logger.LogInformation("Kafka consumer started and subscribed to topics: user-registered, role-changed");
 
             // Основной цикл обработки сообщений (ждем новое сообщение)
             while (!stoppingToken.IsCancellationRequested)
@@ -74,78 +73,103 @@ namespace UserService.Services.Kafka
                     if (cr?.Message?.Value == null)
                         continue;
 
-                    // Десереализуем сообщение
-                    var evt = JsonSerializer.Deserialize<UserRegisteredEvent>(cr.Message.Value);
-                    if (evt == null)
-                        continue;
+                    // Топик
+                    var topic = cr.Topic;
 
                     // Создаем scope для DI
                     using var scope = _scopeFactory.CreateScope();
                     var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-                    // Проверяем есть ли такой профиль
-                    var existing = await userService.GetProfileAsync(evt.UserId);
-                    if (existing != null)
+                    // Обрабатываем сообщение из топика user-registered
+                    if (string.Equals(topic, "user-registered", StringComparison.OrdinalIgnoreCase))
                     {
-                        _logger.LogInformation("Profile already exists for UserId {UserId}", evt.UserId);
+                        // Десереализуем сообщение
+                        var evt = JsonSerializer.Deserialize<UserRegisteredEvent>(cr.Message.Value);
+                        if (evt == null) continue;
 
-                        var alreadyCreatedEvent = new ProfileCreatedEvent
+                        // Проверяем есть ли такой профиль
+                        var existing = await userService.GetProfileAsync(evt.UserId);
+                        if (existing != null)
                         {
-                            EventId = Guid.NewGuid().ToString(),
-                            UserId = evt.UserId,
-                            Success = true,
-                            CreatedAt = existing.CreatedAT
-                        };
+                            _logger.LogInformation("Profile already exists for UserId {UserId}", evt.UserId);
+                            var alreadyCreatedEvent = new ProfileCreatedEvent
+                            {
+                                EventId = Guid.NewGuid().ToString(),
+                                UserId = evt.UserId,
+                                Success = true,
+                                CreatedAt = existing.CreatedAt
+                            };
 
-                        // Отправляем сообщение, что профиль уже есть
-                        await _producer.ProduceAsync("profile-created", alreadyCreatedEvent, stoppingToken);
-                        continue;
-                    }
-
-                    // Создаем профиль
-                    try
-                    {
-                        var created = await userService.CreateProfileAsync(new CreatedProfileRequest
-                        {
-                            UserId = evt.UserId,
-                            UserName = evt.Username,
-                            DisplayName = evt.Username
-                        });
-
-                        _logger.LogInformation("Profile created for UserId {UserId}", evt.UserId);
-
-                        // Отправляем событие об успешном создании
-                        var successEvent = new ProfileCreatedEvent
-                        {
-                            EventId = Guid.NewGuid().ToString(),
-                            UserId = created.UserId,
-                            Success = true,
-                            CreatedAt = created.CreatedAT
-                        };
-
-                        await _producer.ProduceAsync("profile-created", successEvent, stoppingToken);
-                    }
-                    catch (Exception exCreate)
-                    {
-                        // Логируем и отправляем событие с ошибкой
-                        _logger.LogError(exCreate, "Failed to create profile for UserId {UserId}", evt.UserId);
-
-                        var errorEvent = new ProfileCreatedEvent
-                        {
-                            EventId = Guid.NewGuid().ToString(),
-                            UserId = evt.UserId,
-                            Success = false,
-                            Error = exCreate.Message,
-                            CreatedAt = DateTime.UtcNow
-                        };
-
+                            // Отправляем сообщение, что профиль уже есть
+                            await _producer.ProduceAsync("profile-created", alreadyCreatedEvent, stoppingToken);
+                            continue;
+                        }
+                        // Создаем профиль
                         try
                         {
-                            await _producer.ProduceAsync("profile-created", errorEvent, stoppingToken);
+                            var created = await userService.CreateProfileAsync(new CreatedProfileRequest
+                            {
+                                UserId = evt.UserId,
+                                UserName = evt.Username,
+                                DisplayName = evt.Username
+                            });
+                            _logger.LogInformation("Profile created for UserId {UserId}", evt.UserId);
+
+                            // Отправляем событие успешного создания профиля
+                            var successEvent = new ProfileCreatedEvent
+                            {
+                                EventId = Guid.NewGuid().ToString(),
+                                UserId = created.UserId,
+                                Success = true,
+                                CreatedAt = created.CreatedAt
+                            };
+                            await _producer.ProduceAsync("profile-created", successEvent, stoppingToken);
                         }
-                        catch (Exception exProduce)
+                        // Логируем и отправляем событие с ошибкой
+                        catch (Exception exCreate)
                         {
-                            _logger.LogError(exProduce, "Failed to publish profile-created for UserId {UserId}", evt.UserId);
+                            _logger.LogError(exCreate, "Failed to create profile for UserId {UserId}", evt.UserId);
+                            var errorEvent = new ProfileCreatedEvent
+                            {
+                                EventId = Guid.NewGuid().ToString(),
+                                UserId = evt.UserId,
+                                Success = false,
+                                Error = exCreate.Message,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            try
+                            {
+                                await _producer.ProduceAsync("profile-created", errorEvent, stoppingToken);
+                            }
+                            catch (Exception exProduce)
+                            {
+                                _logger.LogError(exProduce, "Failed to publish profile-created for UserId {UserId}", evt.UserId);
+                            }
+                        }
+                    }
+                    // Обрабатывем топик role-changed
+                    else if (string.Equals(topic, "role-changed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var evt = JsonSerializer.Deserialize<RoleChangedEvent>(cr.Message.Value);
+                        if (evt == null) continue;
+
+                        _logger.LogInformation("role-changed event for {UserId} -> {NewRole}", evt.UserId, evt.Role);
+
+                        // Обновляем роль в профиле
+                        try
+                        {
+                            if (Enum.TryParse<UserRole>(evt.Role, true, out var parsedRole))
+                            {
+                                await userService.UpdateRoleAsync(evt.UserId, parsedRole);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Unknown role received in role-changed: {Role}", evt.Role);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to update role for UserId {UserId}", evt.UserId);
                         }
                     }
                 }
