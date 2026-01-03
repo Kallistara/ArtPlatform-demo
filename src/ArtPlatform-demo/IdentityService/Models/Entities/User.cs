@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace IdentityService.Models
+namespace IdentityService.Models.Entites
 {
     /// <summary>
     /// Модель для хренеия в БД данных для регистрации

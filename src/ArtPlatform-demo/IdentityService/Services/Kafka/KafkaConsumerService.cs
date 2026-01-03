@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 using IdentityService.data;
-using IdentityService.Models;
+using IdentityService.Models.Entites;
 using IdentityService.Models.Kafka;
 using MongoDB.Driver;
 using System.Text.Json;

@@ -28,7 +28,7 @@ namespace IdentityService.Utils
                 {
                     // Создаем новго админа
                     var passwordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
-                    var adminUser = new IdentityService.Models.User
+                    var adminUser = new IdentityService.Models.Entites.User
                     {
                         UserId = adminUserId,
                         Username = adminUsername,

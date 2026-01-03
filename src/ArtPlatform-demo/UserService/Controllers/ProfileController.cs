@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using UserService.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using UserService.Models.DTO;
+using UserService.Models.Entities;
 using UserService.Services;
 
 namespace UserService.Controllers
@@ -53,12 +56,17 @@ namespace UserService.Controllers
 
         /// <summary>
         /// Обновление существующего профиля.
-        /// PUT /api/profile/{userId}
+        /// PUT /api/profile/me
         /// </summary>
-        [HttpPut("{userId}")]
+        [HttpPut("me")]
         [Authorize]
-        public async Task<IActionResult> UpdateProfile(string userId, [FromBody] UpdatedProfileRequest request)
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdatedProfileRequest request)
         {
+            var userId = GetCallerUserId();
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "User id not found in token" });
+
             // Хотя бы одно поле должно быть не null
             if (request.DisplayName == null && request.Bio == null && request.Contact == null)
             {
@@ -81,12 +89,17 @@ namespace UserService.Controllers
 
         /// <summary>
         /// Удаление профиля.
-        /// DELETE /api/profile/{userId}
+        /// DELETE /api/profile/me
         /// </summary>
-        [HttpDelete("{userId}")]
+        [HttpDelete("me")]
         [Authorize]
-        public async Task<IActionResult> DeleteProfile(string userId)
+        public async Task<IActionResult> DeleteProfile()
         {
+            var userId = GetCallerUserId();
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "User id not found in token" });
+
             var deleted = await _userService.DeleteProfileAsync(userId);
 
             if (!deleted)
@@ -131,66 +144,19 @@ namespace UserService.Controllers
             });
         }
 
-        // -------------------------------------------------------------------------------------------------
-        /// <summary>
-        /// Получение профиля по username.
-        /// </summary>
-        /// <param name="username">для которого необходимо найти профиль</param>
-        [HttpGet("by-username/{username}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetProfileByUsername(string username)
-        {
-            if (string.IsNullOrWhiteSpace(username))
-                return BadRequest(new { message = "Username is required" }); // 400
-
-            var profile = await _userService.GetProfileByUsernameAsync(username);
-
-            if (profile == null)
-                return NotFound(new { message = "Profile not found" }); // 404
-
-            return Ok(profile);
-        }
-
-        /// <summary>
-        /// Изменение username пользователя, с проверкой доступности.
-        /// PATCH /api/profile/{userId}/username
-        /// </summary>
-        [HttpPatch("{userId}/username")]
-        [Authorize]
-        public async Task<IActionResult> ChangeUsername(string userId, [FromBody] ChangeUsernameRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _userService.ChangeUsernameAsync(userId, request.NewUsername);
-
-            if (result.Success)
-            {
-                return Ok(new
-                {
-                    profile = result.User,
-                    message = result.Message
-                });
-            }
-            else
-            {
-                return result.ErrorType switch
-                {
-                    "NOT_FOUND" => NotFound(new { message = result.Error }),
-                    "USERNAME_TAKEN" => Conflict(new { message = result.Error }),
-                    _ => BadRequest(new { message = result.Error })
-                };
-            }
-        }
-
         /// <summary>
         /// Обновление статистики контент-креатора.
-        /// PATCH /api/profile/{userId}/creator-stats
+        /// PATCH /api/profile/me/creator-stats
         /// </summary>
-        [HttpPatch("{userId}/creator-stats")]
+        [HttpPatch("me/creator-stats")]
         [Authorize(Roles = "ContentCreator")]
-        public async Task<IActionResult> UpdateCreatorStats(string userId, [FromBody] ContentCreatorStats stats)
+        public async Task<IActionResult> UpdateCreatorStats([FromBody] ContentCreatorStats stats)
         {
+            var userId = GetCallerUserId();
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "User id not found in token" });
+
             var profile = await _userService.UpdateCreatorStatsAsync(userId, stats);
 
             if (profile == null)
@@ -205,12 +171,17 @@ namespace UserService.Controllers
 
         /// <summary>
         /// Обновление статистики пользователя (заказчика).
-        /// PATCH /api/profile/{userId}/user-stats
+        /// PATCH /api/profile/me/user-stats
         /// </summary>
-        [HttpPatch("{userId}/user-stats")]
+        [HttpPatch("me/user-stats")]
         [Authorize]
-        public async Task<IActionResult> UpdateUserStats(string userId, [FromBody] UserStats stats)
+        public async Task<IActionResult> UpdateUserStats([FromBody] UserStats stats)
         {
+            var userId = GetCallerUserId();
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "User id not found in token" });
+
             var profile = await _userService.UpdateUserStatsAsync(userId, stats);
 
             if (profile == null)
@@ -225,12 +196,17 @@ namespace UserService.Controllers
 
         /// <summary>
         /// Обновление социальной статистики.
-        /// PATCH /api/profile/{userId}/social-stats
+        /// PATCH /api/profile/me/social-stats
         /// </summary>
-        [HttpPatch("{userId}/social-stats")]
+        [HttpPatch("me/social-stats")]
         [Authorize]
-        public async Task<IActionResult> UpdateSocialStats(string userId, [FromBody] SocialStats stats)
+        public async Task<IActionResult> UpdateSocialStats([FromBody] SocialStats stats)
         {
+            var userId = GetCallerUserId();
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "User id not found in token" });
+
             var profile = await _userService.UpdateSocialStatsAsync(userId, stats);
 
             if (profile == null)
@@ -244,14 +220,30 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Получение userId из заголовка.
+        /// Получение userId из токена.
         /// </summary>
         [HttpGet("me")]
         [Authorize]
-        public async Task<IActionResult> GetMyProfile([FromHeader(Name = "X-User-Id")] string userId)
+        public async Task<IActionResult> GetMyProfile()
         {
+            // Берем userid из claim токена
+            var userId = GetCallerUserId();
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "User id not found in token" });
+
             var profile = await _userService.GetProfileAsync(userId);
+            if (profile == null) return NotFound(new { message = "Profile not found" });
             return Ok(profile);
+        }
+
+        /// <summary>
+        /// Получение userId текущего пользователя (если доступен в токене), иначе null.
+        /// </summary>
+        private string? GetCallerUserId()
+        {
+            return User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? User.FindFirstValue("sub")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         }
     }
 }

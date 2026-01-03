@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UserService.Models;
 using UserService.Models.Kafka;
+using UserService.Models.Entities;
+using UserService.Models.DTO;
 
 namespace UserService.Services.Kafka
 {
@@ -158,7 +160,7 @@ namespace UserService.Services.Kafka
                         // Обновляем роль в профиле
                         try
                         {
-                            if (Enum.TryParse<UserRole>(evt.Role, true, out var parsedRole))
+                            if (Enum.TryParse<UserRoleEnum>(evt.Role, true, out var parsedRole))
                             {
                                 await userService.UpdateRoleAsync(evt.UserId, parsedRole);
                             }

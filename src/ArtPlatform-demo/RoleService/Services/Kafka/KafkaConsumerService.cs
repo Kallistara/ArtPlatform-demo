@@ -1,5 +1,5 @@
 ﻿using Confluent.Kafka;
-using RoleService.Models;
+using RoleService.Models.Entities;
 using RoleService.Models.Kafka;
 using System.Text.Json;
 
@@ -107,7 +107,7 @@ namespace RoleService.Services.Kafka
                         var isBootstrapAdmin = (!string.IsNullOrWhiteSpace(bootstrapAdminUserId) && evt.UserId == bootstrapAdminUserId)
                             || (!string.IsNullOrWhiteSpace(bootstrapAdminUsername) && string.Equals(evt.Username, bootstrapAdminUsername, StringComparison.OrdinalIgnoreCase));
 
-                        var assignedRole = isBootstrapAdmin ? Models.UserRole.Admin : Models.UserRole.User;
+                        var assignedRole = isBootstrapAdmin ? UserRole.Admin : UserRole.User;
 
                         // Изменяем роль
                         var created = await roleService.UpsertRoleAsync(evt.UserId, assignedRole, assignedBy: "system");

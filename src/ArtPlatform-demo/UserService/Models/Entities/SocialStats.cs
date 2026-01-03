@@ -1,4 +1,4 @@
-﻿namespace UserService.Models
+﻿namespace UserService.Models.Entities
 {
     /// <summary>
     /// Социальная статистика

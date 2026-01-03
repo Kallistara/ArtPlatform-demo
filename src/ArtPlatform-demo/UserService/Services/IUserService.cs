@@ -1,4 +1,5 @@
-﻿using UserService.Models;
+﻿using UserService.Models.DTO;
+using UserService.Models.Entities;
 
 namespace UserService.Services
 {
@@ -23,21 +24,12 @@ namespace UserService.Services
         // Удалить профиль
         Task<bool> DeleteProfileAsync (string userId);
 
-
         // ====== Поиск и валидация ======
         // Поиск профилей по текстовому запросу
         Task<IEnumerable<User>> SearchProfileAsync (string query);
 
-        // Получить профиль по username
-        Task<User?> GetProfileByUsernameAsync(string username);
-
         // Проверка существования username
         Task<bool> UsernameExistsAsync(string username);
-
-
-        // ====== Изменение имени username ======
-        Task<ChangeUsernameResult> ChangeUsernameAsync(string userId, string newUsername);
-
 
         // ====== Статистика ======
         // Изменение данных контент-креатора
@@ -49,7 +41,7 @@ namespace UserService.Services
         // Изменение социальных данных 
         Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats);
 
-
-        Task<User?> UpdateRoleAsync(string userId, UserRole role);
+        // ====== Обновление роли ======
+        Task<User?> UpdateRoleAsync(string userId, UserRoleEnum role);
     }
 }

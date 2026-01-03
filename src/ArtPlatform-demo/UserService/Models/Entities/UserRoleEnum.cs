@@ -1,6 +1,6 @@
-﻿namespace UserService.Models
+﻿namespace UserService.Models.Entities
 {
-    public enum UserRole
+    public enum UserRoleEnum
     {
         Unauthorized = 0,
         User = 1,

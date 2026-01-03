@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 using RoleService.data;
-using RoleService.Models;
+using RoleService.Models.Entities;
 using RoleService.Models.Kafka;
 using RoleService.Services.Kafka;
 

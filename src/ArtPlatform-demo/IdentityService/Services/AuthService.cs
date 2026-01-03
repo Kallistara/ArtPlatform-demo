@@ -1,5 +1,6 @@
 ﻿using IdentityService.data;
-using IdentityService.Models;
+using IdentityService.Models.DTO;
+using IdentityService.Models.Entites;
 using IdentityService.Services.Kafka;
 using Microsoft.AspNetCore.Identity.Data;
 using MongoDB.Driver;
@@ -35,7 +36,7 @@ namespace IdentityService.Services
         /// </summary>
         /// <param name="request">данные для регистрации</param>
         /// <returns>id созданного пользователя</returns>
-        public async Task<string> RegisterAsync(Models.RegisterRequest request)
+        public async Task<string> RegisterAsync(Models.DTO.RegisterRequest request)
         {
             var existing = await _users.Find(u => u.Username == request.Username).AnyAsync();
 
@@ -74,15 +75,15 @@ namespace IdentityService.Services
         /// </summary>
         /// <param name="request">данные для аутенфикации</param>
         /// <returns>объект AuthResponse с id и токеном</returns>
-        public async Task<AuthResponse?> LoginAsync(Models.LoginRequest request)
+        public async Task<AuthResponse?> LoginAsync(Models.DTO.LoginRequest request)
         {
             // Поиск пользователя
             var user = await _users.Find(u => u.Username == request.Username).FirstOrDefaultAsync();
-            if (user == null) 
+            if (user == null)
                 return null;
 
             // Проверка пароля
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) 
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 return null;
 
             // Генерация токена
@@ -96,52 +97,29 @@ namespace IdentityService.Services
         }
 
         /// <summary>
-        /// Сброс старого пароля и установка нового
+        /// Изменение пароля
         /// </summary>
-        /// <param name="request">данные для смены пароля</param>
-        /// <returns>1 - если изменен, 0 - если не изменен</returns>
-        public async Task<bool> ResetPasswordAsync(Models.LoginRequest request)
+        /// <param name="userId">идентификатор пользователя</param>
+        /// <param name="currentPassword">текущий пароль</param>
+        /// <param name="newPassword">новый пароль</param>
+        /// <returns>1 - при изменении пароля, 0 - при ошибке изменения</returns>
+        public async Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
         {
-            var user = await _users.Find(u => u.Username == request.Username).FirstOrDefaultAsync();
+            // Находим пользователя в коллекции
+            var user = await _users.Find(u => u.UserId == userId).FirstOrDefaultAsync();
+            if (user == null) throw new Exception("User not found");
 
-            if (user == null)
-                throw new Exception("Пользователь не найден");
+            // Проверяем текущий пароль
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+                throw new Exception("Current password is incorrect");
 
-            // Хэш нового пароля
-            var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            var newHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var update = Builders<User>.Update.Set(u => u.PasswordHash, newHash);
 
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
-            var update = Builders<User>.Update
-                .Set(u => u.PasswordHash, newPasswordHash);
-
+            // Изменяем пароль
             var result = await _users.UpdateOneAsync(filter, update);
-
             return result.ModifiedCount > 0;
         }
-
-
-        //--------------------------------------------------------------------------------------------
-        /// <summary>
-        /// Получение информации о пользователе по UserId
-        /// </summary>
-        /// <param name="userId">Идентификатор пользователя</param>
-        /// <returns>Информация о пользователе</returns>
-        public async Task<UserInfoResponse?> GetUserByIdAsync(string userId)
-        {
-            var user = await _users
-                .Find(u => u.UserId == userId)
-                .FirstOrDefaultAsync();
-
-            if (user == null)
-                return null;
-
-            return new UserInfoResponse
-            {
-                UserId = user.UserId,
-                Username = user.Username,
-                CreatedAt = user.CreatedAt
-            };
-        }
-
     }
 }

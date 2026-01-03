@@ -6,7 +6,7 @@ namespace UserService.Services.Kafka
     /// <summary>
     /// Класс для создания продьюсера для отправки сообщений в кафку
     /// </summary>
-    public class KafkaProducerService
+    public class KafkaProducerService : IDisposable
     {
         private readonly IProducer<Null, string> _producer;
 

@@ -1,4 +1,4 @@
-﻿namespace RoleService.Models
+﻿namespace RoleService.Models.DTO
 {
     /// <summary>
     /// DTO для назначения роли

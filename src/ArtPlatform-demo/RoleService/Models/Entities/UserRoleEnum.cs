@@ -1,4 +1,4 @@
-﻿namespace RoleService.Models
+﻿namespace RoleService.Models.Entities
 {
     /// <summary>
     /// Перечисление всех ролей

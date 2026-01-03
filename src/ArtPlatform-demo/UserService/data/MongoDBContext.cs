@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using UserService.Models;
+using UserService.Models.Entities;
 
 namespace UserService.data
 {

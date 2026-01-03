@@ -1,4 +1,4 @@
-﻿namespace IdentityService.Models
+﻿namespace IdentityService.Models.DTO
 {
     public class AuthResponse
     {

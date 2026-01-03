@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using RoleService.Models;
+using RoleService.Models.Entities;
 
 namespace RoleService.data
 {

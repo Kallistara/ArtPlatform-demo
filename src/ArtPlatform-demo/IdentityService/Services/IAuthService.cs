@@ -1,4 +1,4 @@
-﻿using IdentityService.Models;
+﻿using IdentityService.Models.DTO;
 
 namespace IdentityService.Services
 {
@@ -7,9 +7,13 @@ namespace IdentityService.Services
     /// </summary>
     public interface IAuthService
     {
-        Task<string> RegisterAsync(RegisterRequest request); // регистрация
-        Task<AuthResponse?> LoginAsync(LoginRequest request); // аутенфикация
-        Task<UserInfoResponse?> GetUserByIdAsync(string userId); // получение информации и пользователе
-        Task<bool> ResetPasswordAsync(Models.LoginRequest request); // сброс пароля
+        // Регистрация
+        Task<string> RegisterAsync(RegisterRequest request); 
+
+        // Аутенфикация
+        Task<AuthResponse?> LoginAsync(LoginRequest request); 
+
+        // Смена пароля
+        Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
     }
 }

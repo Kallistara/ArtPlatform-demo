@@ -1,4 +1,4 @@
-﻿using RoleService.Models;
+﻿using RoleService.Models.Entities;
 
 namespace RoleService.Services
 {

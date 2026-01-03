@@ -2,7 +2,8 @@
 using MongoDB.Driver.Linq;
 using System.ComponentModel;
 using UserService.data;
-using UserService.Models;
+using UserService.Models.DTO;
+using UserService.Models.Entities;
 using UserService.Models.Kafka;
 using UserService.Services.Kafka;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -61,7 +62,7 @@ namespace UserService.Services
                 Bio = request.Bio,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                Role = UserRole.Unauthorized
+                Role = UserRoleEnum.Unauthorized
             };
 
             await _profiles.InsertOneAsync(user);
@@ -190,19 +191,6 @@ namespace UserService.Services
         }
 
         /// <summary>
-        /// Получение профиля по username
-        /// </summary>
-        /// <param name="username">для поиска профиля</param>
-        /// <returns>найденного пользователя или null</returns>
-        public async Task<User?> GetProfileByUsernameAsync(string username)
-        {
-            if (string.IsNullOrWhiteSpace(username))
-                return null;
-
-            return await _profiles.Find(p => p.UserName == username).FirstOrDefaultAsync();
-        }
-
-        /// <summary>
         /// Проверка существования профиля с заданным username
         /// </summary>
         /// <param name="username">для проверки существования</param>
@@ -213,64 +201,6 @@ namespace UserService.Services
                 return false;
 
             return await _profiles.Find(p => p.UserName == username).AnyAsync();
-        }
-
-        /// <summary>
-        /// Изменение Username пользователя
-        /// </summary>
-        /// <param name="userId">id пользователя, имя которого будет меняться</param>
-        /// <param name="newUsername">новое имя пользователя</param>
-        /// <returns>null при ошибке + описание ошибки, измененного пользователя</returns>
-        public async Task<ChangeUsernameResult> ChangeUsernameAsync(string userId, string newUsername)
-        {
-            // Получаем текущего пользователя
-            var existingUser = await GetProfileAsync(userId);
-
-            if (existingUser == null)
-                return new ChangeUsernameResult
-                {
-                    Success = false,
-                    Error = "User not found",
-                    ErrorType = "NOT_FOUND"
-                };
-
-            // Проверяем, тот же username или другой
-            if (existingUser.UserName == newUsername)
-                return new ChangeUsernameResult
-                {
-                    Success = true,
-                    User = existingUser,
-                    Message = "Username is already set to this value"
-                };
-
-            // Проверяем доступность нового username
-            if (await UsernameExistsAsync(newUsername))
-                return new ChangeUsernameResult
-                {
-                    Success = false,
-                    Error = "Username already taken",
-                    ErrorType = "USERNAME_TAKEN"
-                };
-
-            // Обновляем username в базе
-            var filter = Builders<User>.Filter.Eq(p => p.UserId, userId);
-            var update = Builders<User>.Update
-                .Set(p => p.UserName, newUsername)
-                .Set(p => p.UpdatedAt, DateTime.UtcNow);
-
-            var options = new FindOneAndUpdateOptions<User>
-            {
-                ReturnDocument = ReturnDocument.After
-            };
-
-            var updatedUser = await _profiles.FindOneAndUpdateAsync(filter, update, options);
-
-            return new ChangeUsernameResult
-            {
-                Success = true,
-                User = updatedUser,
-                Message = "Username changed successfully"
-            };
         }
 
         /// <summary>
@@ -351,7 +281,7 @@ namespace UserService.Services
         /// <param name="userId"></param>
         /// <param name="role"></param>
         /// <returns>обновленный объект</returns>
-        public async Task<User?> UpdateRoleAsync(string userId, UserRole role)
+        public async Task<User?> UpdateRoleAsync(string userId, UserRoleEnum role)
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
             var update = Builders<User>.Update

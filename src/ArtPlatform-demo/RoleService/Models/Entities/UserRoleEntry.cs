@@ -1,7 +1,8 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
-namespace RoleService.Models
+namespace RoleService.Models.Entities
 {
     /// <summary>
     /// Класс - роли пользователей в системе
@@ -17,6 +18,7 @@ namespace RoleService.Models
 
         // Текущая роль
         [BsonRepresentation(BsonType.String)]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public UserRole Role { get; set; } = UserRole.Unauthorized;
 
         // Кем назначено (UserId администратора)

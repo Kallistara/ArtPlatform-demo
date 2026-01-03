@@ -1,4 +1,4 @@
-﻿namespace UserService.Models
+﻿namespace UserService.Models.Entities
 {
     /// <summary>
     /// Статистика контент-креатора

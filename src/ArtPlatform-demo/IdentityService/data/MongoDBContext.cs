@@ -1,4 +1,4 @@
-﻿using IdentityService.Models;
+﻿using IdentityService.Models.Entites;
 using MongoDB.Driver;
 
 namespace IdentityService.data
@@ -23,11 +23,29 @@ namespace IdentityService.data
             // Создание клиента MongoDB
             var client = new MongoClient(connectionString);
             _database = client.GetDatabase(databaseName);
+
+            // Создание индексов при инициализации
+            CreateIndexes();
         }
 
         /// <summary>
         /// Доступ к коллекции пользователей
         /// </summary>
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+
+        /// <summary>
+        /// Создание индексов для коллекции пользователей
+        /// </summary>
+        private void CreateIndexes()
+        {
+            var users = Users;
+
+            var usernameIndex = Builders<User>.IndexKeys.Ascending(u => u.Username);
+            var usernameIndexOptions = new CreateIndexOptions { Unique = true };
+            users.Indexes.CreateOne(new CreateIndexModel<User>(usernameIndex, usernameIndexOptions));
+
+            var userIdIndex = Builders<User>.IndexKeys.Ascending(u => u.UserId);
+            users.Indexes.CreateOne(new CreateIndexModel<User>(userIdIndex));
+        }
     }
 }

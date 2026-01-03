@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UserService.Models
+namespace UserService.Models.DTO
 {
     /// <summary>
     /// DTO для создания нового профиля

@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
-namespace UserService.Models
+namespace UserService.Models.Entities
 {
     /// <summary>
     /// Основная модель пользовательского профиля со статистикой 
@@ -34,7 +35,8 @@ namespace UserService.Models
 
         // Роль пользователя 
         [BsonRepresentation(MongoDB.Bson.BsonType.String)]
-        public UserRole Role { get; set; } = UserRole.Unauthorized;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public UserRoleEnum Role { get; set; } = UserRoleEnum.Unauthorized;
 
         // Статистика для Контент-креатора
         public ContentCreatorStats? CreatorStats { get; set; }

@@ -37,8 +37,9 @@ namespace IdentityService.Services
         {
             var claims = new List<Claim>
             {
-                new Claim("sub", userId),
-                new Claim("username", username)
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim("username", username),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             if (!string.IsNullOrWhiteSpace(role))
@@ -58,57 +59,6 @@ namespace IdentityService.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        /// <summary>
-        /// Извлечение userId из JWT токена без валидации
-        /// </summary>
-        /// <param name="token">токен</param>
-        /// <returns>идентификатор или null</returns>
-        public string? GetUserIdFromToken(string token)
-        {
-            try
-            {
-                var handler = new JwtSecurityTokenHandler();
-                var jwt = handler.ReadJwtToken(token);
-                return jwt.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Полная валидация JWT токена
-        /// Проверяет подпись, срок действия, издателя и аудиторию
-        /// </summary>
-        /// <param name="token">токен</param>
-        /// <returns>true если токен валиден</returns>
-        public bool ValidateToken(string token)
-        {
-            try
-            {
-                var handler = new JwtSecurityTokenHandler();
-                var parameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = _configuration["Jwt:Issuer"],
-                    ValidAudience = _configuration["Jwt:Audience"],
-                    IssuerSigningKey = _key,
-                    ClockSkew = TimeSpan.Zero
-                };
-
-                handler.ValidateToken(token, parameters, out _);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 }

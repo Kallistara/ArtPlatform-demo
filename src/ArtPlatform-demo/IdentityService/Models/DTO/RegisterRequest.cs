@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IdentityService.Models
+namespace IdentityService.Models.DTO
 {
     /// <summary>
     /// DTO для регистрации с валидацией

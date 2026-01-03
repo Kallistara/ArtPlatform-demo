@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RoleService.Models;
+using RoleService.Models.DTO;
+using RoleService.Models.Entities;
 using RoleService.Models.Kafka;
 using RoleService.Services;
 using RoleService.Services.Kafka;
@@ -49,7 +50,7 @@ namespace RoleService.Controllers
         public async Task<IActionResult> AssignRole(string userId, [FromBody] AssignRoleRequest req)
         {
             // Валидация роли
-            if (!Enum.TryParse<Models.UserRole>(req.Role, true, out var parsed))
+            if (!Enum.TryParse<UserRole>(req.Role, true, out var parsed))
                 return BadRequest(new { error = "Invalid role" });
 
             var updated = await _roleService.UpsertRoleAsync(userId, parsed, req.AssignedBy);

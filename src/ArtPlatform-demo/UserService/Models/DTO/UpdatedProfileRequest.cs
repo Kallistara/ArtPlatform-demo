@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using UserService.Models.Entities;
 
-namespace UserService.Models
+namespace UserService.Models.DTO
 {
     /// <summary>
     /// DTO для обновления профиля
