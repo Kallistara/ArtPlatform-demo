@@ -81,7 +81,7 @@
     },
 
     {
-      "UpstreamPathTemplate": "/api/profile/{userId}",
+      "UpstreamPathTemplate": "/api/profile/me",
       "UpstreamHttpMethod": [ "PUT", "DELETE", "PATCH" ],
 
       "AuthenticationOptions": {
@@ -89,7 +89,7 @@
         "AllowedScopes": []
       },
 
-      "DownstreamPathTemplate": "/api/profile/{userId}",
+      "DownstreamPathTemplate": "/api/profile/me",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -128,7 +128,7 @@
     },
 
     {
-      "UpstreamPathTemplate": "/api/profile/{userId}/creator-stats",
+      "UpstreamPathTemplate": "/api/profile/me/creator-stats",
       "UpstreamHttpMethod": [ "PATCH" ],
 
       "AuthenticationOptions": {
@@ -136,7 +136,7 @@
         "AllowedScopes": []
       },
 
-      "DownstreamPathTemplate": "/api/profile/{userId}/creator-stats",
+      "DownstreamPathTemplate": "/api/profile/me/creator-stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -147,7 +147,7 @@
     },
 
     {
-      "UpstreamPathTemplate": "/api/profile/{userId}/user-stats",
+      "UpstreamPathTemplate": "/api/profile/me/user-stats",
       "UpstreamHttpMethod": [ "PATCH" ],
 
       "AuthenticationOptions": {
@@ -155,7 +155,7 @@
         "AllowedScopes": []
       },
 
-      "DownstreamPathTemplate": "/api/profile/{userId}/user-stats",
+      "DownstreamPathTemplate": "/api/profile/me/user-stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -166,7 +166,7 @@
     },
 
     {
-      "UpstreamPathTemplate": "/api/profile/{userId}/social-stats",
+      "UpstreamPathTemplate": "/api/profile/me/social-stats",
       "UpstreamHttpMethod": [ "PATCH" ],
 
       "AuthenticationOptions": {
@@ -174,7 +174,7 @@
         "AllowedScopes": []
       },
 
-      "DownstreamPathTemplate": "/api/profile/{userId}/social-stats",
+      "DownstreamPathTemplate": "/api/profile/me/social-stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

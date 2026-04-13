@@ -103,7 +103,6 @@ var bootstrap = builder.Configuration["KAFKA_BOOTSTRAP_SERVERS"]
 var topics = new[]
 {
     new TopicSpecification { Name = "user-registered", NumPartitions = 1, ReplicationFactor = 1 },
-    new TopicSpecification { Name = "profile-created", NumPartitions = 1, ReplicationFactor = 1 },
     new TopicSpecification { Name = "user-deleted", NumPartitions = 1, ReplicationFactor = 1 } 
 };
 await KafkaTopicHelper.EnsureTopicsCreatedAsync(bootstrap, topics);

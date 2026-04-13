@@ -14,7 +14,7 @@ namespace RoleService.Services
         Task<UserRoleEntry> UpsertRoleAsync(string userId, UserRole role, string? assignedBy = null);
 
         // Удалить роль пользователя
-        Task<bool> RemoveRoleAsync(string userId, string? removedBy = null);
+        Task<bool> DeleteRoleAsync(string userId);
 
         // Получить всех пользователей с указанной ролью
         Task<IEnumerable<UserRoleEntry>> GetByRoleAsync(UserRole role);

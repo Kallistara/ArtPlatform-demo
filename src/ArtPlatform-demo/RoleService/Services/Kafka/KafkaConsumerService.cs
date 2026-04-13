@@ -86,23 +86,6 @@ namespace RoleService.Services.Kafka
                         var evt = JsonSerializer.Deserialize<UserRegisteredEvent>(cr.Message.Value);
                         if (evt == null) continue;
 
-                        // Получаем роль по идентификатору
-                        var existing = await roleService.GetByUserIdAsync(evt.UserId);
-                        if (existing != null)
-                        {
-                            _logger.LogInformation("Role already exists for {UserId}: {Role}", evt.UserId, existing.Role);
-
-                            // Создаем событие о смене роли
-                            var roleEvent = new RoleChangedEvent
-                            {
-                                UserId = evt.UserId,
-                                Role = existing.Role.ToString(),
-                                AssignedAt = existing.AssignedAt
-                            };
-                            await producer.ProduceAsync("role-changed", roleEvent, stoppingToken);
-                            continue;
-                        }
-
                         // Смена роли на админ
                         var isBootstrapAdmin = (!string.IsNullOrWhiteSpace(bootstrapAdminUserId) && evt.UserId == bootstrapAdminUserId)
                             || (!string.IsNullOrWhiteSpace(bootstrapAdminUsername) && string.Equals(evt.Username, bootstrapAdminUsername, StringComparison.OrdinalIgnoreCase));
@@ -110,19 +93,9 @@ namespace RoleService.Services.Kafka
                         var assignedRole = isBootstrapAdmin ? UserRole.Admin : UserRole.User;
 
                         // Изменяем роль
-                        var created = await roleService.UpsertRoleAsync(evt.UserId, assignedRole, assignedBy: "system");
-                        _logger.LogInformation("Assigned default role '{Role}' to {UserId} (bootstrap admin = {IsAdmin})", created.Role, evt.UserId, isBootstrapAdmin);
+                        await roleService.UpsertRoleAsync(evt.UserId, assignedRole, assignedBy: "system");
+                        _logger.LogInformation("Assigned default role '{Role}' to {UserId})", assignedRole, evt.UserId);
 
-                        // Создаем событие о создании роли
-                        var successEvent = new RoleChangedEvent
-                        {
-                            UserId = created.UserId,
-                            Role = created.Role.ToString(),
-                            AssignedBy = created.AssignedBy,
-                            AssignedAt = created.AssignedAt
-                        };
-
-                        await producer.ProduceAsync("role-changed", successEvent, stoppingToken);
                     }
 
                     // Обрабатываем топик user-deleted
@@ -135,14 +108,8 @@ namespace RoleService.Services.Kafka
                         _logger.LogInformation("Received user-deleted for {UserId}, removing/setting role to Unauthorized", evt.UserId);
 
                         // Помечаем роль как Unauthorized
-                        try
-                        {
-                            await roleService.RemoveRoleAsync(evt.UserId, removedBy: "user-deleted");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Failed to handle user-deleted for {UserId}", evt.UserId);
-                        }
+                        await roleService.DeleteRoleAsync(evt.UserId);
+
                     }
                 }
                 catch (OperationCanceledException) { break; }

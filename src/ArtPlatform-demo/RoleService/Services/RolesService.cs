@@ -134,40 +134,11 @@ namespace RoleService.Services
         /// </summary>
         /// <param name="userId"></param>
         /// <returns>1 - если удалена, 0 - если не удалена</returns>
-        public async Task<bool> RemoveRoleAsync(string userId, string? removedBy = null)
+        public async Task<bool> DeleteRoleAsync(string userId)
         {
-            var now = DateTime.UtcNow;
-
             var filter = Builders<UserRoleEntry>.Filter.Eq(r => r.UserId, userId);
-            var update = Builders<UserRoleEntry>.Update
-                .Set(r => r.Role, UserRole.Unauthorized)
-                .Set(r => r.AssignedBy, removedBy)
-                .Set(r => r.AssignedAt, now);
-
-            var result = await _roles.UpdateOneAsync(filter, update);
-
-            if (result.MatchedCount > 0)
-            {
-                // Публикуем событие о смене роли 
-                try
-                {
-                    var evt = new RoleChangedEvent
-                    {
-                        EventId = Guid.NewGuid().ToString(),
-                        UserId = userId,
-                        Role = UserRole.Unauthorized.ToString(),
-                        AssignedBy = removedBy,
-                        AssignedAt = now
-                    };
-                    await _producer.ProduceAsync("role-changed", evt);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to produce role-changed (removed) event for UserId {UserId}", userId);
-                }
-            }
-
-            return result.MatchedCount > 0;
+            var result = await _roles.DeleteOneAsync(filter);
+            return result.DeletedCount > 0;
         }
 
         /// <summary>

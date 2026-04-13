@@ -64,9 +64,9 @@ namespace RoleService.Controllers
         /// </summary>
         [HttpDelete("{userId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteRole(string userId, [FromQuery] string? removedBy)
+        public async Task<IActionResult> DeleteRole(string userId)
         {
-            var ok = await _roleService.RemoveRoleAsync(userId, removedBy);
+            var ok = await _roleService.DeleteRoleAsync(userId);
 
             if (!ok) return NotFound();
             return NoContent();

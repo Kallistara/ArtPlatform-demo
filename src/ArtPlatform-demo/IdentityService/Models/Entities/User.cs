@@ -26,14 +26,5 @@ namespace IdentityService.Models.Entites
         // Роль пользователя 
         [BsonRepresentation(BsonType.String)]
         public string? Role { get; set; } = null;
-
-        // Флаг создания профиля
-        public bool? ProfileCreated { get; set; } = null;
-
-        // Дата создания профиля 
-        public DateTime? ProfileCreatedAt { get; set; } = null;
-
-        // Текст ошибки
-        public string? ProfileCreationError { get; set; } = null; 
     }
 }
