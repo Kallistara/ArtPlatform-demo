@@ -31,16 +31,6 @@ namespace UserService.Services
         // Проверка существования username
         Task<bool> UsernameExistsAsync(string username);
 
-        // ====== Статистика ======
-        // Изменение данных контент-креатора
-        Task<User?> UpdateCreatorStatsAsync(string userId, ContentCreatorStats stats);
-
-        // Изменение данных пользователя
-        Task<User?> UpdateUserStatsAsync(string userId, UserStats stats);
-
-        // Изменение социальных данных 
-        Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats);
-
         // ====== Обновление роли ======
         Task<User?> UpdateRoleAsync(string userId, UserRoleEnum role);
     }

@@ -121,11 +121,11 @@ namespace ArtService.Controllers
         /// <summary>
         /// Создание новой картины.
         /// POST /api/artworks
-        /// Доступен только художникам и админам.
+        /// Доступен только художникам.
         /// </summary>
         /// <param name="request">DTO для создания картины</param>
         [HttpPost]
-        [Authorize(Roles = "ContentCreator,Admin")]
+        [Authorize(Roles = "Artist")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Create([FromForm] CreateArtworkRequest request)
         {
@@ -164,7 +164,7 @@ namespace ArtService.Controllers
         /// <param name="artworkId">Идентификатор картины для изменения</param>
         /// <param name="request">DTO для изменения картины</param>
         [HttpPut("{id}")]
-        [Authorize(Roles = "ContentCreator,Admin")]
+        [Authorize(Roles = "Artist,Admin")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Update ([FromRoute(Name = "id")] string artworkId, [FromForm] UpdateArtworkRequest request)
         {
@@ -200,7 +200,7 @@ namespace ArtService.Controllers
         /// </summary>
         /// <param name="artworkId">Идентификатор картины для удаления</param>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "ContentCreator,Admin")]
+        [Authorize(Roles = "Artist,Admin")]
         public async Task<IActionResult> Delete ([FromRoute(Name = "id")] string artworkId)
         {
             var callerUserId = GetCallerUserId();

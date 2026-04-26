@@ -105,7 +105,7 @@ namespace RoleService.Services.Kafka
                         var evt = JsonSerializer.Deserialize<UserDeletedEvent>(cr.Message.Value);
                         if (evt == null) continue;
 
-                        _logger.LogInformation("Received user-deleted for {UserId}, removing/setting role to Unauthorized", evt.UserId);
+                        _logger.LogInformation("Received user-deleted for {UserId}, role deleted", evt.UserId);
 
                         // Помечаем роль как Unauthorized
                         await roleService.DeleteRoleAsync(evt.UserId);

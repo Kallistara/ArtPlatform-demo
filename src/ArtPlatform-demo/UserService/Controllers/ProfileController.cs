@@ -91,7 +91,7 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Удаление профиля.
+        /// Удаление своего профиля.
         /// DELETE /api/profile/me
         /// Доступен всем авторизованным.
         /// </summary>
@@ -110,6 +110,27 @@ namespace UserService.Controllers
                 return NotFound(new { message = "Profile not found" }); // 404
 
             return NoContent(); // 204
+        }
+
+        /// <summary>
+        /// Удаление любого профиля по идентификатору.
+        /// DELETE /api/profile/admin/{userId}
+        /// Доступно только админу
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        [HttpDelete("admin/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteProfileByAdmin(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(new { message = "User id is required" });
+
+            var deleted = await _userService.DeleteProfileAsync(userId);
+
+            if (!deleted)
+                return NotFound(new { message = "Profile not found" });
+
+            return NoContent();
         }
 
         /// <summary>
@@ -147,84 +168,6 @@ namespace UserService.Controllers
                 username = username,
                 available = !exists,
                 message = exists ? "Username already taken" : "Username available"
-            });
-        }
-
-        /// <summary>
-        /// Обновление статистики контент-креатора.
-        /// PATCH /api/profile/me/creator-stats
-        /// Доступен только художникам.
-        /// </summary>
-        [HttpPatch("me/creator-stats")]
-        [Authorize(Roles = "ContentCreator")]
-        public async Task<IActionResult> UpdateCreatorStats([FromBody] ContentCreatorStats stats)
-        {
-            var userId = GetCallerUserId();
-
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized(new { message = "User id not found in token" });
-
-            var profile = await _userService.UpdateCreatorStatsAsync(userId, stats);
-
-            if (profile == null)
-                return NotFound(new { message = "Profile not found" });
-
-            return Ok(new
-            {
-                profile = profile,
-                message = "Creator stats updated"
-            });
-        }
-
-        /// <summary>
-        /// Обновление статистики пользователя (заказчика).
-        /// PATCH /api/profile/me/user-stats
-        /// Доступен всем авторизованным.
-        /// </summary>
-        [HttpPatch("me/user-stats")]
-        [Authorize]
-        public async Task<IActionResult> UpdateUserStats([FromBody] UserStats stats)
-        {
-            var userId = GetCallerUserId();
-
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized(new { message = "User id not found in token" });
-
-            var profile = await _userService.UpdateUserStatsAsync(userId, stats);
-
-            if (profile == null)
-                return NotFound(new { message = "Profile not found" });
-
-            return Ok(new
-            {
-                profile = profile,
-                message = "User stats updated"
-            });
-        }
-
-        /// <summary>
-        /// Обновление социальной статистики.
-        /// PATCH /api/profile/me/social-stats
-        /// Доступен всем авторизованным.
-        /// </summary>
-        [HttpPatch("me/social-stats")]
-        [Authorize]
-        public async Task<IActionResult> UpdateSocialStats([FromBody] SocialStats stats)
-        {
-            var userId = GetCallerUserId();
-
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized(new { message = "User id not found in token" });
-
-            var profile = await _userService.UpdateSocialStatsAsync(userId, stats);
-
-            if (profile == null)
-                return NotFound(new { message = "Profile not found" });
-
-            return Ok(new
-            {
-                profile = profile,
-                message = "Social stats updated"
             });
         }
 

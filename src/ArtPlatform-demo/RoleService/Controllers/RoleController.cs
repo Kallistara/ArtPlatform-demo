@@ -31,6 +31,7 @@ namespace RoleService.Controllers
         /// <summary>
         /// Получить роль пользователя по его идентификатору.
         /// GET /api/role/{userId}
+        /// Доступен всем.
         /// </summary>
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetRole(string userId)
@@ -44,6 +45,7 @@ namespace RoleService.Controllers
         /// <summary>
         /// Назначить роль пользователю.
         /// POST /api/role/{userId}/assign
+        /// Доступен только админу.
         /// </summary>
         [HttpPost("{userId}/assign")]
         [Authorize(Roles = "Admin")]
@@ -59,22 +61,9 @@ namespace RoleService.Controllers
         }
 
         /// <summary>
-        /// Удалить роль пользователя.
-        /// DELETE /api/role/{userId}
-        /// </summary>
-        [HttpDelete("{userId}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteRole(string userId)
-        {
-            var ok = await _roleService.DeleteRoleAsync(userId);
-
-            if (!ok) return NotFound();
-            return NoContent();
-        }
-
-        /// <summary>
         /// Получить всех пользователей с указанной ролью.
         /// GET /api/role/by-role/{role}
+        /// Доступен только админу
         /// </summary>
         [HttpGet("by-role/{role}")]
         [Authorize(Roles = "Admin")]

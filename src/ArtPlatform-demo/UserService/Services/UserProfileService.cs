@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using System.ComponentModel;
 using UserService.data;
@@ -199,78 +200,6 @@ namespace UserService.Services
                 return false;
 
             return await _profiles.Find(p => p.UserName == username).AnyAsync();
-        }
-
-        /// <summary>
-        /// Обновление статистики контент-креатора
-        /// </summary>
-        /// <param name="userId">id контент-креатора для обновления статистики</param>
-        /// <param name="stats">объект статистики контент-креатора</param>
-        /// <returns>обновленный объект</returns>
-        public async Task<User?> UpdateCreatorStatsAsync(string userId, ContentCreatorStats stats)
-        {
-            var user = await GetProfileAsync(userId);
-            if (user == null) return null;
-
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
-            var update = Builders<User>.Update
-                .Set(u => u.UpdatedAt, DateTime.UtcNow)
-                .Set(u => u.CreatorStats, stats);
-
-            var options = new FindOneAndUpdateOptions<User>
-            {
-                ReturnDocument = ReturnDocument.After
-            };
-
-            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
-        }
-
-        /// <summary>
-        /// Обновление статистики пользователя
-        /// </summary>
-        /// <param name="userId">id пользователя для обновления статистики</param>
-        /// <param name="stats">объект статистики пользователя</param>
-        /// <returns>обновленный объект</returns>
-        public async Task<User?> UpdateUserStatsAsync(string userId, UserStats stats)
-        {
-            var user = await GetProfileAsync(userId);
-            if (user == null) return null;
-
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
-            var update = Builders<User>.Update
-                .Set(u => u.UpdatedAt, DateTime.UtcNow)
-                .Set(u => u.UserStats, stats);
-
-            var options = new FindOneAndUpdateOptions<User>
-            {
-                ReturnDocument = ReturnDocument.After
-            };
-
-            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
-        }
-
-        /// <summary>
-        /// Обновление социальной статистики
-        /// </summary>
-        /// <param name="userId">id пользователя для обновления статистики</param>
-        /// <param name="stats">объект социальной статистики</param>
-        /// <returns>обновленный объект</returns>
-        public async Task<User?> UpdateSocialStatsAsync(string userId, SocialStats stats)
-        {
-            var user = await GetProfileAsync(userId);
-            if (user == null) return null;
-
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
-            var update = Builders<User>.Update
-                .Set(u => u.UpdatedAt, DateTime.UtcNow)
-                .Set(u => u.SocialStats, stats);
-
-            var options = new FindOneAndUpdateOptions<User>
-            {
-                ReturnDocument = ReturnDocument.After
-            };
-
-            return await _profiles.FindOneAndUpdateAsync(filter, update, options);
         }
 
         /// <summary>

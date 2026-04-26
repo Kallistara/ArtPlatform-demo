@@ -129,63 +129,6 @@
       ]
     },
 
-    {
-      "UpstreamPathTemplate": "/api/profile/me/creator-stats",
-      "UpstreamHttpMethod": [ "PATCH" ],
-
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-
-      "DownstreamPathTemplate": "/api/profile/me/creator-stats",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "user-profile-service",
-          "Port": 5002
-        }
-      ]
-    },
-
-    {
-      "UpstreamPathTemplate": "/api/profile/me/user-stats",
-      "UpstreamHttpMethod": [ "PATCH" ],
-
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-
-      "DownstreamPathTemplate": "/api/profile/me/user-stats",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "user-profile-service",
-          "Port": 5002
-        }
-      ]
-    },
-
-    {
-      "UpstreamPathTemplate": "/api/profile/me/social-stats",
-      "UpstreamHttpMethod": [ "PATCH" ],
-
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-
-      "DownstreamPathTemplate": "/api/profile/me/social-stats",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "user-profile-service",
-          "Port": 5002
-        }
-      ]
-    },
-
 
 
     {
@@ -231,25 +174,6 @@
       },
 
       "DownstreamPathTemplate": "/api/role/{userId}/assign",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "role-service",
-          "Port": 5003
-        }
-      ]
-    },
-
-    {
-      "UpstreamPathTemplate": "/api/role/{userId}",
-      "UpstreamHttpMethod": [ "DELETE" ],
-
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-
-      "DownstreamPathTemplate": "/api/role/{userId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

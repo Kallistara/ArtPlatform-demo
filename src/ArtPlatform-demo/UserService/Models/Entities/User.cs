@@ -37,14 +37,5 @@ namespace UserService.Models.Entities
         [BsonRepresentation(MongoDB.Bson.BsonType.String)]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public UserRoleEnum Role { get; set; } = UserRoleEnum.Unauthorized;
-
-        // Статистика для Контент-креатора
-        public ContentCreatorStats? CreatorStats { get; set; }
-
-        // Статистика для авторизованного пользователя (заказчика)
-        public UserStats UserStats { get; set; } = new UserStats();
-
-        // Социальная статистика
-        public SocialStats SocialStats { get; set; } = new SocialStats(); 
     }
 }
