@@ -1,7 +1,7 @@
 ﻿using Confluent.Kafka;
 using System.Text.Json;
 
-namespace UserService.Services.Kafka
+namespace ArtService.Services.Kafka
 {
     /// <summary>
     /// Класс для создания продьюсера для отправки сообщений в кафку

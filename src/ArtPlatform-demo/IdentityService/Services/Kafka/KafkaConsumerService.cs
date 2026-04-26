@@ -46,7 +46,7 @@ namespace IdentityService.Services.Kafka
             var config = new ConsumerConfig
             {
                 BootstrapServers = bootstrap,
-                GroupId = "identity-profile-created-group",
+                GroupId = "identity-service-consumer-group",
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
@@ -54,7 +54,7 @@ namespace IdentityService.Services.Kafka
 
             // Полписываемся на топик
             consumer.Subscribe(new[] { "role-changed", "user-deleted" });
-            _logger.LogInformation("ProfileCreatedConsumer subscribed to topics: role-changed, user-deleted ");
+            _logger.LogInformation("IdentityConsumer subscribed to topics: role-changed, user-deleted ");
 
             // Основной цикл обработки сообщений (ждем новое сообщение)
             while (!stoppingToken.IsCancellationRequested)

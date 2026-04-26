@@ -44,7 +44,7 @@ namespace RoleService.Services.Kafka
             var config = new ConsumerConfig
             {
                 BootstrapServers = bootstrap,
-                GroupId = "roles-user-registered-group",
+                GroupId = "role-service-consumer-group",
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 

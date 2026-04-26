@@ -32,6 +32,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Получение списка всех профилей.
         /// GET /api/profile
+        /// Доступен только админу.
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -40,6 +41,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Получение профиля по UserId.
         /// GET /api/profile/{userId}
+        /// Доступен всем.
         /// </summary>
         [HttpGet("{userId}")]
         [AllowAnonymous]
@@ -57,6 +59,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Обновление существующего профиля.
         /// PUT /api/profile/me
+        /// Доступен всем авторизованным.
         /// </summary>
         [HttpPut("me")]
         [Authorize]
@@ -90,6 +93,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Удаление профиля.
         /// DELETE /api/profile/me
+        /// Доступен всем авторизованным.
         /// </summary>
         [HttpDelete("me")]
         [Authorize]
@@ -111,6 +115,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Поиск профилей по текстовому запросу.
         /// GET /api/profile/search?query=...
+        /// Доступен всем.
         /// </summary>
         [HttpGet("search")]
         [AllowAnonymous]
@@ -126,6 +131,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Проверка доступности username.
         /// GET /api/profile/check-username/{username}
+        /// Доступен всем.
         /// </summary>
         [HttpGet("check-username/{username}")]
         [AllowAnonymous]
@@ -147,6 +153,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Обновление статистики контент-креатора.
         /// PATCH /api/profile/me/creator-stats
+        /// Доступен только художникам.
         /// </summary>
         [HttpPatch("me/creator-stats")]
         [Authorize(Roles = "ContentCreator")]
@@ -172,6 +179,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Обновление статистики пользователя (заказчика).
         /// PATCH /api/profile/me/user-stats
+        /// Доступен всем авторизованным.
         /// </summary>
         [HttpPatch("me/user-stats")]
         [Authorize]
@@ -197,6 +205,7 @@ namespace UserService.Controllers
         /// <summary>
         /// Обновление социальной статистики.
         /// PATCH /api/profile/me/social-stats
+        /// Доступен всем авторизованным.
         /// </summary>
         [HttpPatch("me/social-stats")]
         [Authorize]
@@ -220,7 +229,8 @@ namespace UserService.Controllers
         }
 
         /// <summary>
-        /// Получение userId из токена.
+        /// Получение собственного профиля.
+        /// Доступен всем авторизованным.
         /// </summary>
         [HttpGet("me")]
         [Authorize]

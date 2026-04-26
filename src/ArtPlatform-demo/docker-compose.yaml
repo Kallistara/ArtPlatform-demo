@@ -110,6 +110,27 @@ services:
     networks:
       - artplatform-network
 
+  art-service:
+    build:
+      context: ./ArtService
+      dockerfile: Dockerfile
+    ports:
+      - "5004:5004"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+      - KAFKA_BOOTSTRAP_SERVERS=broker:9092
+      - ASPNETCORE_URLS=http://+:5004
+    volumes:
+      - ./ArtService/wwwroot:/app/wwwroot
+    depends_on:
+      broker:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    networks:
+      - artplatform-network
+
 volumes:
   mongo-data:
   broker-data:

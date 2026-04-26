@@ -10,11 +10,5 @@
 
         // Идентификтор пользователя
         public string UserId { get; set; } = string.Empty;
-
-        // Имя пользователя (логин)
-        public string? Username { get; set; }
-
-        // Время удаления
-        public DateTime DeletedAt { get; set; } = DateTime.UtcNow;
     }
 }

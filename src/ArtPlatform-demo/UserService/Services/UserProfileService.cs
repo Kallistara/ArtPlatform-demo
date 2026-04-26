@@ -151,9 +151,7 @@ namespace UserService.Services
                     var evt = new UserDeletedEvent
                     {
                         EventId = Guid.NewGuid().ToString(),
-                        UserId = userId,
-                        Username = existing.UserName,
-                        DeletedAt = DateTime.UtcNow
+                        UserId = userId
                     };
                     await _producer.ProduceAsync("user-deleted", evt);
                     _logger.LogInformation("Published user-deleted for UserId {UserId}", userId);

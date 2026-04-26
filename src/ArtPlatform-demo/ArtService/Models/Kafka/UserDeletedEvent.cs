@@ -1,4 +1,4 @@
-﻿namespace IdentityService.Models.Kafka
+﻿namespace ArtService.Models.Kafka
 {
     /// <summary>
     /// Модель события удаления пользователя
