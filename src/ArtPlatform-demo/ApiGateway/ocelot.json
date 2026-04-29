@@ -309,6 +309,65 @@
 
   ],
 
+
+
+  {
+    "UpstreamPathTemplate": "/api/favorites/me",
+    "UpstreamHttpMethod": [ "GET" ],
+
+    "AuthenticationOptions": {
+      "AuthenticationProviderKey": "Bearer",
+      "AllowedScopes": []
+    },
+
+    "DownstreamPathTemplate": "/api/favorites/me",
+    "DownstreamScheme": "http",
+    "DownstreamHostAndPorts": [
+      {
+        "Host": "favorites-service",
+        "Port": 5005
+      }
+    ]
+  },
+
+  {
+    "UpstreamPathTemplate": "/api/favorites/me/{artworkId}",
+    "UpstreamHttpMethod": [ "POST", "DELETE" ],
+
+    "AuthenticationOptions": {
+      "AuthenticationProviderKey": "Bearer",
+      "AllowedScopes": []
+    },
+
+    "DownstreamPathTemplate": "/api/favorites/me/{artworkId}",
+    "DownstreamScheme": "http",
+    "DownstreamHostAndPorts": [
+      {
+        "Host": "favorites-service",
+        "Port": 5005
+      }
+    ]
+  },
+
+  {
+    "UpstreamPathTemplate": "/api/favorites/me/{artworkId}/exists",
+    "UpstreamHttpMethod": [ "GET" ],
+
+    "AuthenticationOptions": {
+      "AuthenticationProviderKey": "Bearer",
+      "AllowedScopes": []
+    },
+
+    "DownstreamPathTemplate": "/api/favorites/me/{artworkId}/exists",
+    "DownstreamScheme": "http",
+    "DownstreamHostAndPorts": [
+      {
+        "Host": "favorites-service",
+        "Port": 5005
+      }
+    ]
+  },
+
   "GlobalConfiguration": {
     "RequestIdKey": "OcRequestId"
   }

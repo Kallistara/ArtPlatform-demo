@@ -49,6 +49,7 @@ services:
       - identity-service
       - user-profile-service
       - role-service
+      - art-service
       - broker
     networks:
       - artplatform-network
@@ -126,6 +127,28 @@ services:
       broker:
         condition: service_healthy
       mongo:
+        condition: service_started
+    networks:
+      - artplatform-network
+
+  favorites-service:
+    build:
+      context: ./FavoritesService
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5005"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+      - KAFKA_BOOTSTRAP_SERVERS=broker:9092
+      - ASPNETCORE_URLS=http://+:5005
+      - ArtService__BaseUrl=http://art-service:5004
+    depends_on:
+      broker:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      art-service:
         condition: service_started
     networks:
       - artplatform-network

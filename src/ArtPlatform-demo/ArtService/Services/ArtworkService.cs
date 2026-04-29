@@ -88,10 +88,48 @@ namespace ArtService.Services
             if (current == null)
                 return new List<Artwork>();
 
-            return await _artworks.Find(x =>
-                x.Category == current.Category && x.Id != current.Id)
-                .SortByDescending(x => x.CreatedAt)
+            var candidates = await _artworks.Find(x =>
+                x.Id != artworkId &&
+                (
+                    x.Category == current.Category ||
+                    x.Style == current.Style ||
+                    x.Material == current.Material
+                ))
                 .ToListAsync();
+
+            var ranked = candidates
+                .Select(x =>
+                {
+                    var score = 0;
+
+                    if (!string.IsNullOrWhiteSpace(current.Category) && x.Category == current.Category)
+                        score += 3;
+
+                    if (!string.IsNullOrWhiteSpace(current.Style) && x.Style == current.Style)
+                        score += 2;
+
+                    if (!string.IsNullOrWhiteSpace(current.Material) && x.Material == current.Material)
+                        score += 1;
+
+                    return new
+                    {
+                        Artwork = x,
+                        Score = score
+                    };
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .ThenByDescending(x => x.Artwork.CreatedAt)
+                .Take(limit)
+                .Select(x => x.Artwork)
+                .ToList();
+
+            return ranked;
+
+            //return await _artworks.Find(x =>
+            //    x.Category == current.Category && x.Id != current.Id)
+            //    .SortByDescending(x => x.CreatedAt)
+            //    .ToListAsync();
         }
 
         /// <summary>
