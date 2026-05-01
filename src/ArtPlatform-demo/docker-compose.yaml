@@ -153,6 +153,28 @@ services:
     networks:
       - artplatform-network
 
+  cart-service:
+    build:
+      context: ./CartService
+      dockerfile: Dockerfile
+    ports:
+      - "5006:5006"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+      - KAFKA_BOOTSTRAP_SERVERS=broker:9092
+      - ASPNETCORE_URLS=http://+:5006
+      - ArtService__BaseUrl=http://art-service:5004
+    depends_on:
+      broker:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      art-service:
+        condition: service_started
+    networks:
+      - artplatform-network
+
 volumes:
   mongo-data:
   broker-data:

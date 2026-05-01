@@ -1,12 +1,12 @@
-using FavoritesService.data;
-using FavoritesService.Services;
-using FavoritesService.Services.Kafka;
+using CartService.data;
+using CartService.Services;
+using CartService.Services.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://0.0.0.0:5005");
+builder.WebHost.UseUrls("http://0.0.0.0:5006");
 
 // Конфигурация для подключения к ArtService
 var artServiceBaseUrl = builder.Configuration["ArtService:BaseUrl"]
@@ -90,7 +90,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddSingleton<MongoDBContext>();
 
 // Регистрация бизнес-сервисов
-builder.Services.AddScoped<IFavoritesArtService, FavoritesArtService>();
+builder.Services.AddScoped<IArtCartService, ArtCartService>();
 
 // Регистрация кафки 
 builder.Services.AddHostedService<KafkaConsumerService>();

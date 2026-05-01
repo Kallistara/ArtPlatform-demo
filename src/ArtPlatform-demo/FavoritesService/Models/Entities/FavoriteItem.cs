@@ -3,7 +3,7 @@
 namespace FavoritesService.Models.Entities
 {
     /// <summary>
-    /// Модель для хренеия в БД данных об избранных картинах
+    /// Модель для хренения в БД данных об избранных картинах
     /// </summary>
     public class FavoriteItem
     {

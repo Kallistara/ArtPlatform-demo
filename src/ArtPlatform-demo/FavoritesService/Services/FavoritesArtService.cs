@@ -16,7 +16,6 @@ namespace FavoritesService.Services
         // Экземпляр клиента 
         private readonly IHttpClientFactory _httpClientFactory;
         private  readonly ILogger _logger;
-        private readonly IConfiguration _configuration; // конфигурация
 
         /// <summary>
         /// Конструктор
@@ -24,14 +23,12 @@ namespace FavoritesService.Services
         /// <param name="context">БД</param>
         /// <param name="httpClientFactory">Экземпляр клиента</param>
         /// <param name="logger">Логирование</param>
-        /// <param name="configuration">Конфигурация</param>
         public FavoritesArtService(MongoDBContext context, IHttpClientFactory httpClientFactory, 
-            ILogger<FavoritesArtService> logger, IConfiguration configuration)
+            ILogger<FavoritesArtService> logger)
         {
             _favorites = context.Favorites;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
-            _configuration = configuration;
         }
 
         /// <summary>
@@ -139,14 +136,8 @@ namespace FavoritesService.Services
         /// <returns>Объект DTO с заполненными полями или null</returns>
         private async Task<ArtworkDto?> FetchArtworkAsync (string artworkId)
         {
-            // Читаем адрес ArtService
-            var baseUrl = _configuration["ArtService:BaseUrl"]
-                ?? Environment.GetEnvironmentVariable("ART_SERVICE_BASE_URL")
-                ?? "http://localhost:5004";
-
             // Создаем клиента
             var client = _httpClientFactory.CreateClient("ArtService");
-            client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
 
             try
             {
