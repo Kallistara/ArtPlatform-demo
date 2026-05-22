@@ -1,0 +1,54 @@
+.page {
+  padding: 48px 24px 80px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 40px;
+}
+
+.subtitle {
+  margin: 0;
+  color: #555;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.filters {
+  position: sticky;
+  top: 96px;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  padding: 20px;
+  background: #fff;
+}
+
+.filtersTitle {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+
+.filterBox {
+  min-height: 64px;
+  border: 1px dashed #ddd;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+  color: #666;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}

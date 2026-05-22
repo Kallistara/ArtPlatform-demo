@@ -13,6 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
+// Добавляем поддержку CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendCors", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
+
 // Конфигурация JWT 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "SUPER-SECRET-KEY-123-456-789-ABC-DEF-GHI";
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
@@ -54,6 +65,7 @@ builder.Services.AddOcelot(builder.Configuration);
 var app = builder.Build();
 
 app.UseRouting();
+app.UseCors("FrontendCors");
 
 app.UseAuthentication();
 app.UseAuthorization();

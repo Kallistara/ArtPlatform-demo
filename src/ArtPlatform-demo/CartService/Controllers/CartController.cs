@@ -160,7 +160,6 @@ namespace CartService.Controllers
         /// Доступно авторизованным.
         /// </summary>
         /// <param name="artworkId"></param>
-        /// <returns></returns>
         [HttpGet("me/{artworkId}/exists")]
         [Authorize]
         public async Task<IActionResult> IsInCart (string artworkId)

@@ -1,0 +1,29 @@
+.section {
+  padding: 84px 24px;
+  background: #fafafa;
+}
+
+.inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0 0 32px;
+  font-size: 28px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.card {
+  min-height: 320px;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}

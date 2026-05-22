@@ -1,0 +1,20 @@
+.section {
+  padding: 84px 24px;
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0 0 16px;
+  font-size: 28px;
+}
+
+.text {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #444;
+}

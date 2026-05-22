@@ -1,0 +1,28 @@
+.section {
+  padding: 84px 24px;
+}
+
+.inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0 0 32px;
+  font-size: 28px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.item {
+  min-height: 180px;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: #fafafa;
+}

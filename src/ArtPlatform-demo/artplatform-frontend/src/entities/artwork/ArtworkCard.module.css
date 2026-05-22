@@ -1,0 +1,50 @@
+.card {
+  height: 100%;
+}
+
+.link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  height: 100%;
+}
+
+.imageWrap {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #f3f3f3;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.body {
+  padding: 16px;
+}
+
+.category {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #777;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.artist {
+  margin: 0 0 10px;
+  color: #666;
+}
+
+.price {
+  margin: 0;
+  font-weight: 600;
+}

@@ -1,0 +1,8 @@
+.section {
+  padding: 72px 24px;
+}
+
+.inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}

@@ -1,0 +1,48 @@
+.page {
+  padding: 48px 24px 80px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.imageWrap {
+  border-radius: 24px;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.image {
+  width: 100%;
+  display: block;
+}
+
+.info {
+  position: sticky;
+  top: 96px;
+}
+
+.artist {
+  margin: 0 0 8px;
+  color: #666;
+}
+
+.title {
+  margin: 0 0 16px;
+  font-size: 44px;
+}
+
+.price {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.description {
+  margin: 0;
+  line-height: 1.7;
+  color: #444;
+}
