@@ -1,0 +1,25 @@
+/* src/pages/AccountPage/AccountPage.module.css */
+.page { padding: 48px 24px 80px; }
+.header { display:flex; justify-content:space-between; gap:24px; align-items:flex-start; margin-bottom:24px; }
+.title { margin:0 0 8px; font-size:40px; }
+.subtitle { margin:0; color:#666; }
+.actions { display:flex; gap:12px; flex-wrap:wrap; }
+.actionButton,.button,.dangerButton { min-height:44px; border-radius:12px; padding:0 16px; cursor:pointer; border:1px solid #ddd; background:#fff; }
+.button { background:#111; color:#fff; border-color:#111; }
+.dangerButton { background:#fff5f5; border-color:#f2b8b5; color:#b42318; }
+.summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
+.summaryItem,.card,.form { border:1px solid #eee; border-radius:20px; background:#fff; padding:20px; }
+.summaryItem span,.contactRow span { display:block; color:#666; font-size:13px; margin-bottom:6px; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
+.sectionTitle { margin:0 0 16px; font-size:22px; }
+.text { margin:0; line-height:1.7; color:#333; }
+.contactList { display:grid; gap:14px; }
+.contactRow { display:flex; justify-content:space-between; gap:16px; }
+.form { display:grid; gap:16px; margin-bottom:24px; }
+.label { display:grid; gap:8px; color:#333; }
+.input,.textarea { width:100%; min-height:46px; padding:0 14px; border:1px solid #ddd; border-radius:12px; }
+.textarea { min-height:120px; padding:12px 14px; resize:vertical; }
+.contactGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.adminOnly { margin-top:8px; }
+.metaLine { margin-top:20px; color:#777; }
+@media (max-width: 960px){ .summary,.grid,.contactGrid { grid-template-columns:1fr; } .header{flex-direction:column;} }

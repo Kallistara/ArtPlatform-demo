@@ -1,0 +1,15 @@
+.state {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+.description {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+}

@@ -42,7 +42,13 @@
 }
 
 .description {
-  margin: 0;
+  margin: 0 0 24px;
   line-height: 1.7;
   color: #444;
+}
+
+.meta {
+  display: grid;
+  gap: 10px;
+  color: #555;
 }

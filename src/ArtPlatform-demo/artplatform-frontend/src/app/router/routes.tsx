@@ -1,6 +1,8 @@
+// src/app/router/routes.tsx
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { AuthLayout } from '../layouts/AuthLayout/AuthLayout';
+import { ProtectedRoute } from '../../shared/ui/ProtectedRoute/ProtectedRoute';
 import { HomePage } from '../../pages/HomePage/HomePage';
 import { CatalogPage } from '../../pages/CatalogPage/CatalogPage';
 import { ArtworkPage } from '../../pages/ArtworkPage/ArtworkPage';
@@ -10,6 +12,7 @@ import { CartPage } from '../../pages/CartPage/CartPage';
 import { AccountPage } from '../../pages/AccountPage/AccountPage';
 import { LoginPage } from '../../pages/LoginPage/LoginPage';
 import { RegisterPage } from '../../pages/RegisterPage/RegisterPage';
+import { AdminPage } from '../../pages/AdminPage/AdminPage';
 
 export function AppRoutes() {
   return (
@@ -19,9 +22,14 @@ export function AppRoutes() {
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/artworks/:id" element={<ArtworkPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/account" element={<AccountPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/account" element={<AccountPage />} />
+        </Route>
+        <Route element={<ProtectedRoute roles={['Admin']} />}>
+          <Route path="/admin" element={<AdminPage />} />
+        </Route>
       </Route>
 
       <Route element={<AuthLayout />}>

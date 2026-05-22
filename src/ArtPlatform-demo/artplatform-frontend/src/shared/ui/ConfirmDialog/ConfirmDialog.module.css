@@ -1,0 +1,50 @@
+/* src/shared/ui/ConfirmDialog/ConfirmDialog.module.css */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  padding: 24px;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+
+.message {
+  margin: 0 0 20px;
+  color: #444;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.secondary,
+.primary {
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0 16px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.primary {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}

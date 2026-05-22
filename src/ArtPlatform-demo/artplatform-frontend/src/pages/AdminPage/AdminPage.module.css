@@ -1,0 +1,14 @@
+/* src/pages/AdminPage/AdminPage.module.css */
+.page { padding:48px 24px 80px; }
+.title { margin:0 0 24px; font-size:40px; }
+.block { margin-bottom:28px; }
+.subtitle { margin:0 0 14px; font-size:24px; }
+.input,.select { min-height:44px; padding:0 14px; border:1px solid #ddd; border-radius:12px; }
+.table { display:grid; gap:12px; margin-top:16px; }
+.row { display:flex; justify-content:space-between; gap:16px; align-items:center; border:1px solid #eee; border-radius:18px; padding:16px; background:#fff; }
+.main { display:grid; gap:4px; }
+.muted { color:#666; font-size:13px; }
+.actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.smallButton,.smallDanger { min-height:40px; padding:0 14px; border-radius:12px; border:1px solid #ddd; background:#fff; cursor:pointer; }
+.smallDanger { border-color:#f2b8b5; color:#b42318; background:#fff5f5; }
+.roleButtons { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }

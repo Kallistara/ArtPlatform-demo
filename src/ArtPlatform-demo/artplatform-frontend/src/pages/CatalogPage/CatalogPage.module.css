@@ -3,7 +3,7 @@
 }
 
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .title {
@@ -16,35 +16,9 @@
   color: #555;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 32px;
-  align-items: start;
-}
-
-.filters {
-  position: sticky;
-  top: 96px;
-  border: 1px solid #eee;
-  border-radius: 20px;
-  padding: 20px;
-  background: #fff;
-}
-
-.filtersTitle {
-  margin: 0 0 16px;
-  font-size: 20px;
-}
-
-.filterBox {
-  min-height: 64px;
-  border: 1px dashed #ddd;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 12px;
-  color: #666;
+.searchRow {
+  margin-bottom: 32px;
+  max-width: 720px;
 }
 
 .grid {

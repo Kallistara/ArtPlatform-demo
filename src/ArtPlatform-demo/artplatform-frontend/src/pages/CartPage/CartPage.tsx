@@ -1,12 +1,16 @@
-import { Section } from '../../shared/ui/Section/Section';
+import { Container } from '../../shared/ui/Container/Container';
+import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
 
 export function CartPage() {
   return (
-    <Section>
-      <div className="inner">
-        <h1>Корзина</h1>
-        <p>Здесь будут товары и оформление заказа.</p>
-      </div>
-    </Section>
+    <section style={{ padding: '48px 24px 80px' }}>
+      <Container>
+        <h1 style={{ margin: '0 0 16px', fontSize: 40 }}>Корзина</h1>
+        <StateMessage
+          title="Корзина пока пустая"
+          description="Здесь будут товары, их количество и итоговая сумма."
+        />
+      </Container>
+    </section>
   );
 }
