@@ -1,4 +1,3 @@
-// src/shared/api/profile.api.ts
 import { request } from './client';
 
 export type ContactInfo = {
@@ -26,27 +25,35 @@ export type UpdateProfileRequest = {
   contact?: ContactInfo;
 };
 
-export function getMyProfile() {
-  return request<UserProfile>('/api/profile/me');
+export function getMyProfile(authToken?: string) {
+  return request<UserProfile>('/profile/me', {
+    authToken,
+  });
 }
 
 export function updateMyProfile(payload: UpdateProfileRequest) {
-  return request<{ profile: UserProfile; message: string }>('/api/profile/me', {
+  return request<{ profile: UserProfile; message: string }>('/profile/me', {
     method: 'PUT',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
 export function searchProfiles(query: string) {
-  return request<UserProfile[]>(`/api/profile/search?query=${encodeURIComponent(query)}`);
+  return request<UserProfile[]>(`/profile/search?query=${encodeURIComponent(query)}`);
 }
 
 export function getProfileByUserId(userId: string) {
-  return request<UserProfile>(`/api/profile/${userId}`);
+  return request<UserProfile>(`/profile/${userId}`);
 }
 
 export function deleteProfileByAdmin(userId: string) {
-  return request<void>(`/api/profile/admin/${userId}`, {
+  return request<void>(`/profile/admin/${userId}`, {
+    method: 'DELETE',
+  });
+}
+
+export function deleteMyProfile() {
+  return request<void>('/profile/me', {
     method: 'DELETE',
   });
 }

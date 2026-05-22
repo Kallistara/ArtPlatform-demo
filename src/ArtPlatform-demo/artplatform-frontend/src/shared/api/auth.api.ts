@@ -32,22 +32,22 @@ export type ChangePasswordResponse = {
 };
 
 export function login(payload: LoginRequest) {
-  return request<AuthResponse>('/api/auth/login', {
+  return request<AuthResponse>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
 export function register(payload: RegisterRequest) {
-  return request<RegisterResponse>('/api/auth/register', {
+  return request<RegisterResponse>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
 export function changePassword(payload: ChangePasswordRequest) {
-  return request<ChangePasswordResponse>('/api/auth/change-password', {
+  return request<ChangePasswordResponse>('/auth/change-password', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }

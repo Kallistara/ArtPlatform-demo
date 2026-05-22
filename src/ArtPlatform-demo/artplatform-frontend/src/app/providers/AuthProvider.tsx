@@ -1,6 +1,17 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { AuthResponse } from '../../shared/api/auth.api';
-import { login as loginRequest, register as registerRequest } from '../../shared/api/auth.api';
+import {
+  login as loginRequest,
+  register as registerRequest,
+} from '../../shared/api/auth.api';
 import { getMyProfile } from '../../shared/api/profile.api';
 
 type AuthUser = {
@@ -19,7 +30,7 @@ type AuthContextValue = {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => void;
-  refreshUser: () => Promise<void>;
+  refreshUser: (tokenOverride?: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -34,54 +45,139 @@ function toUser(data: AuthResponse): AuthUser {
   };
 }
 
+function readStoredUser(): AuthUser | null {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
-  });
+  const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
 
   useEffect(() => {
     if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     else localStorage.removeItem(STORAGE_KEY);
   }, [user]);
 
-  const refreshUser = async () => {
-    if (!user?.token) return;
-    const profile = await getMyProfile();
-    setUser((prev) =>
-      prev
-        ? {
-            ...prev,
-            userId: profile.userId,
-            role: profile.role,
-            username: profile.userName,
-            displayName: profile.displayName,
-          }
-        : prev
-    );
-  };
+  const refreshUser = useCallback(
+    async (tokenOverride?: string) => {
+      const token =
+        tokenOverride ??
+        readStoredUser()?.token;
+
+      if (!token) {
+        return;
+      }
+
+      const profile = await getMyProfile(token);
+
+      setUser((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          userId: profile.userId,
+          role: profile.role,
+          username: profile.userName,
+          displayName: profile.displayName,
+        };
+      });
+    },
+    [],
+  );
+
+  const login = useCallback(
+    async (username: string, password: string) => {
+      const res = await loginRequest({
+        username,
+        password,
+      });
+
+      const profile = await getMyProfile(
+        res.accessToken
+      );
+
+      const nextUser: AuthUser = {
+        userId: profile.userId,
+        token: res.accessToken,
+        tokenType: res.tokenType || 'Bearer',
+        role: profile.role,
+        username: profile.userName,
+        displayName: profile.displayName,
+      };
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(nextUser)
+      );
+
+      setUser(nextUser);
+    },
+    [],
+  );
+
+  const register = useCallback(
+    async (
+      username: string,
+      password: string,
+      confirmPassword: string
+    ) => {
+      await registerRequest({
+        username,
+        password,
+        confirmPassword,
+      });
+
+      const res = await loginRequest({
+        username,
+        password,
+      });
+
+      const profile = await getMyProfile(
+        res.accessToken
+      );
+
+      const nextUser: AuthUser = {
+        userId: profile.userId,
+        token: res.accessToken,
+        tokenType: res.tokenType || 'Bearer',
+        role: profile.role,
+        username: profile.userName,
+        displayName: profile.displayName,
+      };
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(nextUser)
+      );
+
+      setUser(nextUser);
+    },
+    [],
+  );
+
+  const logout = useCallback(() => {
+    setUser(null);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: Boolean(user?.token),
       isAdmin: user?.role === 'Admin',
-      login: async (username, password) => {
-        const res = await loginRequest({ username, password });
-        const nextUser = toUser(res);
-        setUser(nextUser);
-        await refreshUser();
-      },
-      register: async (username, password, confirmPassword) => {
-        await registerRequest({ username, password, confirmPassword });
-        const res = await loginRequest({ username, password });
-        setUser(toUser(res));
-        await refreshUser();
-      },
-      logout: () => setUser(null),
+      login,
+      register,
+      logout,
       refreshUser,
     }),
-    [user]
+    [user, login, register, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

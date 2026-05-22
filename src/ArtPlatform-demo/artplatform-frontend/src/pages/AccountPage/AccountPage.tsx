@@ -1,17 +1,24 @@
-// src/pages/AccountPage/AccountPage.tsx
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container } from '../../shared/ui/Container/Container';
 import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog/ConfirmDialog';
 import { changePassword } from '../../shared/api/auth.api';
-import { getMyProfile, updateMyProfile, type UserProfile } from '../../shared/api/profile.api';
+import {
+  deleteMyProfile,
+  getMyProfile,
+  updateMyProfile,
+  type UserProfile,
+} from '../../shared/api/profile.api';
 import { useAuth } from '../../app/providers/AuthProvider';
 import styles from './AccountPage.module.css';
 
 const emptyContact = { email: '', website: '', telegram: '', otherContact: '' };
 
 export function AccountPage() {
-  const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const { user, refreshUser, logout } = useAuth();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState('');
@@ -31,14 +38,17 @@ export function AccountPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletingProfile, setDeletingProfile] = useState(false);
 
   useEffect(() => {
     let ignore = false;
+
     async function load() {
       try {
         setLoadingProfile(true);
         const data = await getMyProfile();
         if (ignore) return;
+
         setProfile(data);
         setDisplayName(data.displayName ?? '');
         setBio(data.bio ?? '');
@@ -49,12 +59,16 @@ export function AccountPage() {
           otherContact: data.contact?.otherContact ?? '',
         });
       } catch (e) {
-        if (!ignore) setProfileError(e instanceof Error ? e.message : 'Ошибка загрузки профиля');
+        if (!ignore) {
+          setProfileError(e instanceof Error ? e.message : 'Ошибка загрузки профиля');
+        }
       } finally {
         if (!ignore) setLoadingProfile(false);
       }
     }
+
     load();
+
     return () => {
       ignore = true;
     };
@@ -70,6 +84,7 @@ export function AccountPage() {
     setError('');
     setMessage('');
     setSavingProfile(true);
+
     try {
       const res = await updateMyProfile({
         displayName,
@@ -81,6 +96,7 @@ export function AccountPage() {
           otherContact: contact.otherContact || null,
         },
       });
+
       setProfile(res.profile);
       setMessage(res.message);
       setEditMode(false);
@@ -96,11 +112,14 @@ export function AccountPage() {
     e.preventDefault();
     setError('');
     setMessage('');
+
     if (newPassword !== confirmPassword) {
       setError('Новый пароль и подтверждение не совпадают');
       return;
     }
+
     setSavingPassword(true);
+
     try {
       const res = await changePassword({ currentPassword, newPassword });
       setMessage(res.message);
@@ -115,12 +134,41 @@ export function AccountPage() {
     }
   };
 
+  const onDeleteProfile = async () => {
+    setDeletingProfile(true);
+    setError('');
+    setMessage('');
+
+    try {
+      await deleteMyProfile();
+      logout();
+      navigate('/', { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка удаления профиля');
+    } finally {
+      setDeletingProfile(false);
+      setDeleteOpen(false);
+    }
+  };
+
   if (loadingProfile) {
-    return <section className={styles.page}><Container><StateMessage title="Загрузка профиля..." /></Container></section>;
+    return (
+      <section className={styles.page}>
+        <Container>
+          <StateMessage title="Загрузка профиля..." />
+        </Container>
+      </section>
+    );
   }
 
   if (profileError) {
-    return <section className={styles.page}><Container><StateMessage title="Ошибка" description={profileError} /></Container></section>;
+    return (
+      <section className={styles.page}>
+        <Container>
+          <StateMessage title="Ошибка" description={profileError} />
+        </Container>
+      </section>
+    );
   }
 
   return (
@@ -171,14 +219,17 @@ export function AccountPage() {
         {editMode && (
           <form className={styles.form} onSubmit={onSaveProfile}>
             <h2 className={styles.sectionTitle}>Редактирование профиля</h2>
+
             <label className={styles.label}>
               Display name
               <input className={styles.input} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
             </label>
+
             <label className={styles.label}>
               Bio
               <textarea className={styles.textarea} value={bio} onChange={(e) => setBio(e.target.value)} />
             </label>
+
             <div className={styles.contactGrid}>
               <label className={styles.label}>
                 Email
@@ -197,6 +248,7 @@ export function AccountPage() {
                 <input className={styles.input} value={contact.otherContact} onChange={(e) => setContact((p) => ({ ...p, otherContact: e.target.value }))} />
               </label>
             </div>
+
             <button className={styles.button} type="submit" disabled={savingProfile}>
               {savingProfile ? 'Сохранение...' : 'Сохранить профиль'}
             </button>
@@ -206,18 +258,22 @@ export function AccountPage() {
         {passwordMode && (
           <form className={styles.form} onSubmit={onChangePassword}>
             <h2 className={styles.sectionTitle}>Смена пароля</h2>
+
             <label className={styles.label}>
               Текущий пароль
               <input className={styles.input} type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
             </label>
+
             <label className={styles.label}>
               Новый пароль
               <input className={styles.input} type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
             </label>
+
             <label className={styles.label}>
               Повтор нового пароля
               <input className={styles.input} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </label>
+
             <button className={styles.button} type="submit" disabled={savingPassword}>
               {savingPassword ? 'Сохранение...' : 'Сменить пароль'}
             </button>
@@ -237,9 +293,10 @@ export function AccountPage() {
           open={deleteOpen}
           title="Удалить профиль?"
           message="Это действие удалит ваш профиль без возможности восстановления."
-          confirmText="Удалить"
+          confirmText={deletingProfile ? 'Удаление...' : 'Удалить'}
+          loading={deletingProfile}
           onCancel={() => setDeleteOpen(false)}
-          onConfirm={async () => {}}
+          onConfirm={onDeleteProfile}
         />
 
         <p className={styles.metaLine}>Заполненные контакты: {filledContact.length}</p>

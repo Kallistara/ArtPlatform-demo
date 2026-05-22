@@ -16,22 +16,22 @@ export type AssignRoleRequest = {
 };
 
 export function getRoleByUserId(userId: string) {
-  return request<RoleEntry>(`/api/role/${userId}`);
+  return request<RoleEntry>(`/role/${userId}`);
 }
 
 export function assignRole(userId: string, payload: AssignRoleRequest) {
-  return request<RoleEntry>(`/api/role/${userId}/assign`, {
+  return request<RoleEntry>(`/role/${userId}/assign`, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
 export function deleteRole(userId: string) {
-  return request<void>(`/api/role/${userId}`, {
+  return request<void>(`/role/${userId}`, {
     method: 'DELETE',
   });
 }
 
 export function getUsersByRole(role: UserRole) {
-  return request<RoleEntry[]>(`/api/role/by-role/${role}`);
+  return request<RoleEntry[]>(`/role/by-role/${role}`);
 }

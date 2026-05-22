@@ -35,15 +35,15 @@ export type ArtworkFilter = {
 };
 
 export function getArtworks() {
-  return request<Artwork[]>('/api/artworks');
+  return request<Artwork[]>('/artworks');
 }
 
 export function getArtworkById(id: string) {
-  return request<Artwork>(`/api/artworks/${id}`);
+  return request<Artwork>(`/artworks/${id}`);
 }
 
 export function searchArtworks(query: string) {
-  return request<Artwork[]>(`/api/artworks/search?query=${encodeURIComponent(query)}`);
+  return request<Artwork[]>(`/artworks/search?query=${encodeURIComponent(query)}`);
 }
 
 export function filterArtworks(params: ArtworkFilter) {
@@ -55,5 +55,5 @@ export function filterArtworks(params: ArtworkFilter) {
     }
   });
 
-  return request<Artwork[]>(`/api/artworks/filter?${searchParams.toString()}`);
+  return request<Artwork[]>(`/artworks/filter?${searchParams.toString()}`);
 }

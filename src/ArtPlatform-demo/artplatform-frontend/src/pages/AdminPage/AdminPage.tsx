@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Container } from '../../shared/ui/Container/Container';
 import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog/ConfirmDialog';
-import { assignRole, deleteRole, getUsersByRole, type UserRole, type RoleEntry } from '../../shared/api/roles.api';
+import { assignRole, getUsersByRole, type UserRole, type RoleEntry } from '../../shared/api/roles.api';
 import { deleteProfileByAdmin, searchProfiles, type UserProfile } from '../../shared/api/profile.api';
 import styles from './AdminPage.module.css';
 
@@ -68,9 +68,9 @@ export function AdminPage() {
     setLoadingDelete(true);
     setError('');
     setMessage('');
+
     try {
       await deleteProfileByAdmin(deleteTarget.userId);
-      await deleteRole(deleteTarget.userId);
       setMessage(`Пользователь ${deleteTarget.name} удалён`);
       setDeleteTarget(null);
       setProfiles((prev) => prev.filter((p) => p.userId !== deleteTarget.userId));
