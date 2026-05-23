@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card } from '../../shared/ui/Card/Card';
+import { toImageUrl } from '../../shared/ib/image';
 import styles from './ArtworkCard.module.css';
 
 export type ArtworkCardProps = {
@@ -16,7 +17,7 @@ export function ArtworkCard({ id, title, artistName, price, imageUrl, category }
     <Card className={styles.card}>
       <Link to={`/artworks/${id}`} className={styles.link}>
         <div className={styles.imageWrap}>
-          <img className={styles.image} src={imageUrl} alt={title} />
+          <img className={styles.image} src={toImageUrl(imageUrl)} alt={title} />
         </div>
         <div className={styles.body}>
           {category ? <p className={styles.category}>{category}</p> : null}

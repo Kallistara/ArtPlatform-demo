@@ -45,6 +45,10 @@ function toUser(data: AuthResponse): AuthUser {
   };
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 function readStoredUser(): AuthUser | null {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
@@ -64,103 +68,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(STORAGE_KEY);
   }, [user]);
 
-  const refreshUser = useCallback(
-    async (tokenOverride?: string) => {
-      const token =
-        tokenOverride ??
-        readStoredUser()?.token;
+  const refreshUser = useCallback(async (tokenOverride?: string) => {
+    const token = tokenOverride ?? readStoredUser()?.token ?? user?.token;
+    if (!token) return;
 
-      if (!token) {
+    let attempt = 0;
+    let lastError: unknown = null;
+
+    while (attempt < 8) {
+      try {
+        const profile = await getMyProfile(token);
+
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                userId: profile.userId,
+                role: profile.role,
+                username: profile.userName,
+                displayName: profile.displayName,
+              }
+            : prev
+        );
+
         return;
-      }
+      } catch (error) {
+        lastError = error;
 
-      const profile = await getMyProfile(token);
-
-      setUser((prev) => {
-        if (!prev) {
-          return prev;
+        const message = error instanceof Error ? error.message.toLowerCase() : '';
+        if (message.includes('401') || message.includes('403')) {
+          throw error;
         }
 
-        return {
-          ...prev,
-          userId: profile.userId,
-          role: profile.role,
-          username: profile.userName,
-          displayName: profile.displayName,
-        };
-      });
-    },
-    [],
-  );
+        await sleep(250 + attempt * 250);
+        attempt += 1;
+      }
+    }
+
+    if (lastError instanceof Error) {
+      console.warn('Profile sync failed after retries:', lastError.message);
+    }
+  }, [user?.token]);
 
   const login = useCallback(
     async (username: string, password: string) => {
-      const res = await loginRequest({
-        username,
-        password,
-      });
+      const res = await loginRequest({ username, password });
+      const nextUser = toUser(res);
 
-      const profile = await getMyProfile(
-        res.accessToken
-      );
-
-      const nextUser: AuthUser = {
-        userId: profile.userId,
-        token: res.accessToken,
-        tokenType: res.tokenType || 'Bearer',
-        role: profile.role,
-        username: profile.userName,
-        displayName: profile.displayName,
-      };
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(nextUser)
-      );
-
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
       setUser(nextUser);
+
+      await refreshUser(nextUser.token);
     },
-    [],
+    [refreshUser]
   );
 
   const register = useCallback(
-    async (
-      username: string,
-      password: string,
-      confirmPassword: string
-    ) => {
-      await registerRequest({
-        username,
-        password,
-        confirmPassword,
-      });
+    async (username: string, password: string, confirmPassword: string) => {
+      await registerRequest({ username, password, confirmPassword });
 
-      const res = await loginRequest({
-        username,
-        password,
-      });
+      const res = await loginRequest({ username, password });
+      const nextUser = toUser(res);
 
-      const profile = await getMyProfile(
-        res.accessToken
-      );
-
-      const nextUser: AuthUser = {
-        userId: profile.userId,
-        token: res.accessToken,
-        tokenType: res.tokenType || 'Bearer',
-        role: profile.role,
-        username: profile.userName,
-        displayName: profile.displayName,
-      };
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(nextUser)
-      );
-
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
       setUser(nextUser);
+
+      await refreshUser(nextUser.token);
     },
-    [],
+    [refreshUser]
   );
 
   const logout = useCallback(() => {

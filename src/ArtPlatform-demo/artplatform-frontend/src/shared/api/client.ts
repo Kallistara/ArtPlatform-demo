@@ -5,22 +5,16 @@ import axios, {
   type Method,
 } from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api';
 
 const client = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 function getStoredAuthHeader(): string {
   const raw = localStorage.getItem('artplatform_auth');
 
-  if (!raw) {
-    return '';
-  }
+  if (!raw) return '';
 
   try {
     const parsed = JSON.parse(raw) as {
@@ -28,9 +22,7 @@ function getStoredAuthHeader(): string {
       tokenType?: string;
     };
 
-    if (!parsed.token) {
-      return '';
-    }
+    if (!parsed.token) return '';
 
     return `${parsed.tokenType ?? 'Bearer'} ${parsed.token}`;
   } catch {
@@ -38,45 +30,25 @@ function getStoredAuthHeader(): string {
   }
 }
 
-client.interceptors.request.use((config) => {
-  const hasAuthorization =
-    config.headers &&
-    'Authorization' in config.headers;
-
-  if (hasAuthorization) {
-    return config;
-  }
-
-  const token = getStoredAuthHeader();
-
-  if (token) {
-    if (!config.headers) {
-      config.headers = new AxiosHeaders();
-    }
-
-    config.headers.Authorization = token;
-  }
-
-  return config;
-});
-
-export type RequestOptions = Omit<
-  AxiosRequestConfig,
-  'url' | 'method'
-> & {
+export type RequestOptions = Omit<AxiosRequestConfig, 'url' | 'method' | 'data'> & {
   method?: Method;
+  data?: unknown;
   authToken?: string;
 };
 
-export async function request<T>(
-  url: string,
-  options: RequestOptions = {},
-): Promise<T> {
+export async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
   try {
     const headers = new AxiosHeaders(options.headers);
 
     if (options.authToken) {
       headers.set('Authorization', `Bearer ${options.authToken}`);
+    } else {
+      const storedAuth = getStoredAuthHeader();
+      if (storedAuth) headers.set('Authorization', storedAuth);
+    }
+
+    if (options.data instanceof FormData) {
+      headers.delete('Content-Type');
     }
 
     const response = await client.request<T>({
@@ -98,10 +70,7 @@ export async function request<T>(
           : error.response?.data?.message;
 
       throw new Error(
-        message ||
-          `Request failed with status ${
-            error.response?.status ?? 'unknown'
-          }`
+        message || `Request failed with status ${error.response?.status ?? 'unknown'}`
       );
     }
 

@@ -34,12 +34,25 @@ export type ArtworkFilter = {
   isAvailable?: boolean;
 };
 
+export type ArtworkResponse = {
+  message: string;
+  artwork: Artwork;
+};
+
 export function getArtworks() {
   return request<Artwork[]>('/artworks');
 }
 
 export function getArtworkById(id: string) {
   return request<Artwork>(`/artworks/${id}`);
+}
+
+export function getArtworksByArtistId(artistId: string) {
+  return request<Artwork[]>(`/artworks/artist/${artistId}`);
+}
+
+export function getSimilarArtworks(artworkId: string, limit = 6) {
+  return request<Artwork[]>(`/artworks/${artworkId}/similar?limit=${limit}`);
 }
 
 export function searchArtworks(query: string) {
@@ -56,4 +69,24 @@ export function filterArtworks(params: ArtworkFilter) {
   });
 
   return request<Artwork[]>(`/artworks/filter?${searchParams.toString()}`);
+}
+
+export function createArtwork(formData: FormData) {
+  return request<ArtworkResponse>('/artworks', {
+    method: 'POST',
+    data: formData,
+  });
+}
+
+export function updateArtwork(artworkId: string, formData: FormData) {
+  return request<ArtworkResponse>(`/artworks/${artworkId}`, {
+    method: 'PUT',
+    data: formData,
+  });
+}
+
+export function deleteArtwork(artworkId: string) {
+  return request<void>(`/artworks/${artworkId}`, {
+    method: 'DELETE',
+  });
 }

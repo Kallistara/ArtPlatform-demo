@@ -1,4 +1,3 @@
-// src/widgets/header/Header.tsx
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useScrollDirection } from '../../shared/hooks/UseScrollDirection';
@@ -24,21 +23,44 @@ export function Header() {
         <Link to="/" className={styles.logo}>ArtPlatform</Link>
 
         <nav className={styles.nav}>
-          <NavLink to="/catalog" className={linkClass} end>Каталог</NavLink>
-          <NavLink to="/about" className={linkClass}>О нас</NavLink>
+          <NavLink to="/catalog" className={linkClass} end>
+            Каталог
+          </NavLink>
+
           {isAuthenticated ? (
             <>
-              <NavLink to="/favorites" className={linkClass}>Избранное</NavLink>
-              <NavLink to="/cart" className={linkClass}>Корзина</NavLink>
-              <NavLink to="/account" className={linkClass}>Аккаунт</NavLink>
+              {user?.role === 'Artist' ? (
+                <NavLink to="/artworks/create" className={linkClass}>
+                  Создать картину
+                </NavLink>
+              ) : null}
+
+              {!isAdmin ? (
+                <>
+                  <NavLink to="/favorites" className={linkClass}>
+                    Избранное
+                  </NavLink>
+                  <NavLink to="/cart" className={linkClass}>
+                    Корзина
+                  </NavLink>
+                </>
+              ) : null}
+
+              <NavLink to="/account" className={linkClass}>
+                Аккаунт
+              </NavLink>
               {isAdmin ? <NavLink to="/admin" className={linkClass}>Админка</NavLink> : null}
               <span className={styles.userBadge}>{user?.username || user?.userId}</span>
               <button type="button" className={styles.logoutButton} onClick={handleLogout}>Выйти</button>
             </>
           ) : (
             <>
-              <NavLink to="/login" className={linkClass}>Вход</NavLink>
-              <NavLink to="/register" className={linkClass}>Регистрация</NavLink>
+              <NavLink to="/login" className={linkClass}>
+                Вход
+              </NavLink>
+              <NavLink to="/register" className={linkClass}>
+                Регистрация
+              </NavLink>
             </>
           )}
         </nav>

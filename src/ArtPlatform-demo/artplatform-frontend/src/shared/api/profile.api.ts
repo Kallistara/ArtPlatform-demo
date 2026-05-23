@@ -17,6 +17,7 @@ export type UserProfile = {
   createdAt: string;
   updatedAt: string;
   role: 'Unauthorized' | 'User' | 'Artist' | 'Admin';
+  avatarUrl?: string | null;
 };
 
 export type UpdateProfileRequest = {

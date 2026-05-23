@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Container } from '../../shared/ui/Container/Container';
 import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog/ConfirmDialog';
@@ -10,7 +10,13 @@ import {
   updateMyProfile,
   type UserProfile,
 } from '../../shared/api/profile.api';
+import {
+  deleteArtwork,
+  getArtworksByArtistId,
+  type Artwork,
+} from '../../shared/api/artworks.api';
 import { useAuth } from '../../app/providers/AuthProvider';
+import { toImageUrl } from '../../shared/ib/image';
 import styles from './AccountPage.module.css';
 
 const emptyContact = { email: '', website: '', telegram: '', otherContact: '' };
@@ -40,6 +46,11 @@ export function AccountPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingProfile, setDeletingProfile] = useState(false);
 
+  const [myArtworks, setMyArtworks] = useState<Artwork[]>([]);
+  const [loadingArtworks, setLoadingArtworks] = useState(false);
+  const [artworkDeleteTarget, setArtworkDeleteTarget] = useState<Artwork | null>(null);
+  const [deletingArtwork, setDeletingArtwork] = useState(false);
+
   useEffect(() => {
     let ignore = false;
 
@@ -67,17 +78,52 @@ export function AccountPage() {
       }
     }
 
-    load();
+    void load();
 
     return () => {
       ignore = true;
     };
   }, []);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadMyArtworks() {
+      if (!profile || profile.role !== 'Artist') {
+        setMyArtworks([]);
+        return;
+      }
+
+      try {
+        setLoadingArtworks(true);
+        const items = await getArtworksByArtistId(profile.userId);
+        if (!ignore) setMyArtworks(items);
+      } catch {
+        if (!ignore) setMyArtworks([]);
+      } finally {
+        if (!ignore) setLoadingArtworks(false);
+      }
+    }
+
+    void loadMyArtworks();
+
+    return () => {
+      ignore = true;
+    };
+  }, [profile]);
+
   const filledContact = useMemo(
     () => Object.entries(contact).filter(([, v]) => String(v ?? '').trim() !== ''),
     [contact]
   );
+
+  const isArtist = profile?.role === 'Artist' || user?.role === 'Artist';
+
+  const refreshMyArtworks = async () => {
+    if (!profile || profile.role !== 'Artist') return;
+    const items = await getArtworksByArtistId(profile.userId);
+    setMyArtworks(items);
+  };
 
   const onSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,6 +194,25 @@ export function AccountPage() {
     } finally {
       setDeletingProfile(false);
       setDeleteOpen(false);
+    }
+  };
+
+  const onDeleteArtwork = async () => {
+    if (!artworkDeleteTarget) return;
+
+    setDeletingArtwork(true);
+    setError('');
+    setMessage('');
+
+    try {
+      await deleteArtwork(artworkDeleteTarget.id);
+      setMyArtworks((prev) => prev.filter((item) => item.id !== artworkDeleteTarget.id));
+      setMessage(`Картина "${artworkDeleteTarget.title}" удалена`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка удаления картины');
+    } finally {
+      setDeletingArtwork(false);
+      setArtworkDeleteTarget(null);
     }
   };
 
@@ -283,6 +348,64 @@ export function AccountPage() {
         {message ? <StateMessage title="Успех" description={message} /> : null}
         {error ? <StateMessage title="Ошибка" description={error} /> : null}
 
+        {isArtist ? (
+          <section className={styles.form}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
+              <h2 className={styles.sectionTitle} style={{ margin: 0 }}>Мои работы</h2>
+              <button type="button" className={styles.button} onClick={() => navigate('/artworks/create')}>
+                Создать картину
+              </button>
+            </div>
+
+            {loadingArtworks ? <StateMessage title="Загрузка работ..." /> : null}
+
+            {!loadingArtworks && myArtworks.length === 0 ? (
+              <StateMessage title="Пока нет работ" description="Создайте первую картину, чтобы она появилась здесь." />
+            ) : null}
+
+            <div style={{ display: 'grid', gap: 16 }}>
+              {myArtworks.map((artwork) => (
+                <div
+                  key={artwork.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '120px 1fr auto',
+                    gap: 16,
+                    alignItems: 'center',
+                    padding: 12,
+                    border: '1px solid rgba(128,128,128,0.18)',
+                    borderRadius: 16,
+                  }}
+                >
+                  <Link to={`/artworks/${artwork.id}`}>
+                    <img
+                      src={toImageUrl(artwork.mainImageUrl)}
+                      alt={artwork.title}
+                      style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 12 }}
+                    />
+                  </Link>
+
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{artwork.title}</div>
+                    <div style={{ opacity: 0.75 }}>{artwork.category}</div>
+                    <div>${artwork.price.toFixed(2)}</div>
+                    <div>Количество: {artwork.quantity}</div>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <button type="button" className={styles.actionButton} onClick={() => navigate(`/artworks/${artwork.id}/edit`)}>
+                      Редактировать
+                    </button>
+                    <button type="button" className={styles.actionButton} onClick={() => setArtworkDeleteTarget(artwork)}>
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <div className={styles.adminOnly}>
           <button type="button" className={styles.dangerButton} onClick={() => setDeleteOpen(true)}>
             Удалить мой профиль
@@ -297,6 +420,16 @@ export function AccountPage() {
           loading={deletingProfile}
           onCancel={() => setDeleteOpen(false)}
           onConfirm={onDeleteProfile}
+        />
+
+        <ConfirmDialog
+          open={!!artworkDeleteTarget}
+          title="Удалить картину?"
+          message={artworkDeleteTarget ? `Удалить работу "${artworkDeleteTarget.title}"?` : ''}
+          confirmText={deletingArtwork ? 'Удаление...' : 'Удалить'}
+          loading={deletingArtwork}
+          onCancel={() => setArtworkDeleteTarget(null)}
+          onConfirm={onDeleteArtwork}
         />
 
         <p className={styles.metaLine}>Заполненные контакты: {filledContact.length}</p>

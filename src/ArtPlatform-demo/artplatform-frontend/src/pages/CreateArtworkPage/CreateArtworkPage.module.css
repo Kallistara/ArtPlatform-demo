@@ -1,0 +1,114 @@
+.page {
+  padding: 48px 0 80px;
+}
+
+.wrapper {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 40px;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.gridTwo {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gridThree {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.input,
+.textarea,
+.fileInput {
+  width: 100%;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: transparent;
+  font: inherit;
+  outline: none;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus,
+.fileInput:focus {
+  border-color: rgba(99, 102, 241, 0.75);
+}
+
+.hint {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.error {
+  font-size: 13px;
+  color: #ef4444;
+}
+
+.button {
+  width: fit-content;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #111827;
+  color: white;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+@media (max-width: 900px) {
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+}

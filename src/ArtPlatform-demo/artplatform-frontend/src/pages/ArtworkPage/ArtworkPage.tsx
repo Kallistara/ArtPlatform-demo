@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { Container } from '../../shared/ui/Container/Container';
 import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
-import { getArtworkById, type Artwork } from '../../shared/api/artworks.api';
+import { toImageUrl } from '../../shared/ib/image';
+import { getArtworkById, getArtworksByArtistId, getSimilarArtworks, type Artwork } from '../../shared/api/artworks.api';
+import { getProfileByUserId, type UserProfile } from '../../shared/api/profile.api';
 import { addToFavorites, removeFromFavorites, isFavorite } from '../../shared/api/favorites.api';
 import { addToCart, removeFromCart, isInCart } from '../../shared/api/cart.api';
+import { ArtworkCard } from '../../entities/artwork/ArtworkCard';
 import styles from './ArtworkPage.module.css';
 
 export function ArtworkPage() {
@@ -13,6 +16,11 @@ export function ArtworkPage() {
   const { isAuthenticated } = useAuth();
 
   const [artwork, setArtwork] = useState<Artwork | null>(null);
+  const [author, setAuthor] = useState<UserProfile | null>(null);
+  const [artistWorks, setArtistWorks] = useState<Artwork[]>([]);
+  const [similarWorks, setSimilarWorks] = useState<Artwork[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -22,8 +30,19 @@ export function ArtworkPage() {
   const [busyCart, setBusyCart] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
 
+  const galleryImages = useMemo(() => {
+    if (!artwork) return [];
+    return [artwork.mainImageUrl, ...(artwork.additionaImageUrls ?? [])].filter(Boolean);
+  }, [artwork]);
+
   useEffect(() => {
-    if (!id) return;
+    const artworkId = id;
+
+    if (!artworkId) {
+      setError('Некорректный id картины');
+      setLoading(false);
+      return;
+    }
 
     let ignore = false;
 
@@ -31,51 +50,49 @@ export function ArtworkPage() {
       try {
         setLoading(true);
         setError('');
-        const data = await getArtworkById(id);
-        if (!ignore) setArtwork(data);
+
+        const art = await getArtworkById(artworkId);
+        if (ignore) return;
+
+        setArtwork(art);
+        setSelectedImageIndex(0);
+
+        const [favRes, cartRes, authorRes, artistWorksRes, similarRes] = await Promise.all([
+          isAuthenticated ? isFavorite(artworkId).catch(() => ({ isFavorite: false })) : Promise.resolve({ isFavorite: false }),
+          isAuthenticated ? isInCart(artworkId).catch(() => ({ isInCart: false })) : Promise.resolve({ isInCart: false }),
+          getProfileByUserId(art.artistId).catch(() => null),
+          getArtworksByArtistId(art.artistId).catch(() => [] as Artwork[]),
+          getSimilarArtworks(artworkId, 6).catch(() => [] as Artwork[]),
+        ]);
+
+        if (ignore) return;
+
+        setFavorite(Boolean(favRes.isFavorite));
+        setInCart(Boolean(cartRes.isInCart));
+        setAuthor(authorRes);
+        setArtistWorks(artistWorksRes.filter((x) => x.id !== art.id));
+        setSimilarWorks(similarRes.filter((x) => x.id !== art.id));
       } catch (e) {
-        if (!ignore) setError(e instanceof Error ? e.message : 'Ошибка загрузки картины');
+        if (!ignore) {
+          setError(e instanceof Error ? e.message : 'Ошибка загрузки картины');
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
     }
 
-    load();
-
-    return () => {
-      ignore = true;
-    };
-  }, [id]);
-
-  useEffect(() => {
-    if (!id || !isAuthenticated) return;
-
-    let ignore = false;
-
-    async function loadFlags() {
-      try {
-        const [fav, cart] = await Promise.all([isFavorite(id), isInCart(id)]);
-        if (!ignore) {
-          setFavorite(fav.isFavorite);
-          setInCart(cart.isInCart);
-        }
-      } catch {
-        if (!ignore) {
-          setFavorite(false);
-          setInCart(false);
-        }
-      }
-    }
-
-    loadFlags();
+    void load();
 
     return () => {
       ignore = true;
     };
   }, [id, isAuthenticated]);
 
+  const currentImage = galleryImages[selectedImageIndex] ?? artwork?.mainImageUrl ?? '';
+
   const onToggleFavorite = async () => {
     if (!id) return;
+
     setBusyFavorite(true);
     setActionMessage('');
 
@@ -98,6 +115,7 @@ export function ArtworkPage() {
 
   const onToggleCart = async () => {
     if (!id) return;
+
     setBusyCart(true);
     setActionMessage('');
 
@@ -157,8 +175,25 @@ export function ArtworkPage() {
     <section className={styles.page}>
       <Container>
         <div className={styles.layout}>
-          <div className={styles.imageWrap}>
-            <img className={styles.image} src={artwork.mainImageUrl} alt={artwork.title} />
+          <div className={styles.gallery}>
+            <div className={styles.imageWrap}>
+              <img className={styles.image} src={toImageUrl(currentImage)} alt={artwork.title} />
+            </div>
+
+            {galleryImages.length > 1 ? (
+              <div className={styles.thumbs}>
+                {galleryImages.map((img, index) => (
+                  <button
+                    key={`${img}-${index}`}
+                    type="button"
+                    className={`${styles.thumbButton} ${selectedImageIndex === index ? styles.thumbActive : ''}`}
+                    onClick={() => setSelectedImageIndex(index)}
+                  >
+                    <img className={styles.thumbImage} src={toImageUrl(img)} alt={`${artwork.title} ${index + 1}`} />
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className={styles.info}>
@@ -172,8 +207,40 @@ export function ArtworkPage() {
               <div>Стиль: {artwork.style}</div>
               <div>Материал: {artwork.material}</div>
               <div>Размер: {artwork.width} × {artwork.height}</div>
-              <div>Доступно: {artwork.isAvailable ? 'Да' : 'Нет'}</div>
+              <div>Доступно: {artwork.quantity > 0 ? 'Да' : 'Нет'}</div>
             </div>
+
+            {author ? (
+              <div className={styles.authorBlock}>
+                <div className={styles.authorAvatar}>
+                  {author.avatarUrl ? (
+                    <img src={toImageUrl(author.avatarUrl)} alt={author.displayName || author.userName} />
+                  ) : (
+                    <span>{(author.displayName || author.userName || 'A').slice(0, 1).toUpperCase()}</span>
+                  )}
+                </div>
+
+                <div className={styles.authorInfo}>
+                  <p className={styles.authorLabel}>Автор</p>
+                  <Link to={`/artists/${author.userId}`} className={styles.authorLink}>
+                    {author.displayName || author.userName}
+                  </Link>
+                  <p className={styles.authorBio}>{author.bio || '—'}</p>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.authorBlock}>
+                <div className={styles.authorAvatar}>
+                  <span>{artwork.artistName.slice(0, 1).toUpperCase()}</span>
+                </div>
+                <div className={styles.authorInfo}>
+                  <p className={styles.authorLabel}>Автор</p>
+                  <Link to={`/artists/${artwork.artistId}`} className={styles.authorLink}>
+                    {artwork.artistName}
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {isAuthenticated ? (
               <div className={styles.actions}>
@@ -190,6 +257,58 @@ export function ArtworkPage() {
 
             {actionMessage ? <StateMessage title="Готово" description={actionMessage} /> : null}
           </div>
+        </div>
+
+        <div className={styles.sections}>
+          <details className={styles.collapse} open>
+            <summary className={styles.collapseSummary}>
+              Другие картины этого автора
+            </summary>
+
+            {artistWorks.length > 0 ? (
+              <div className={styles.cardsRow}>
+                {artistWorks.map((item) => (
+                  <div key={item.id} className={styles.cardItem}>
+                    <ArtworkCard
+                      id={item.id}
+                      title={item.title}
+                      artistName={item.artistName}
+                      price={item.price}
+                      imageUrl={item.mainImageUrl}
+                      category={item.category}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.emptyText}>У автора пока нет других работ.</p>
+            )}
+          </details>
+
+          <details className={styles.collapse}>
+            <summary className={styles.collapseSummary}>
+              Похожие картины
+            </summary>
+
+            {similarWorks.length > 0 ? (
+              <div className={styles.cardsRow}>
+                {similarWorks.map((item) => (
+                  <div key={item.id} className={styles.cardItem}>
+                    <ArtworkCard
+                      id={item.id}
+                      title={item.title}
+                      artistName={item.artistName}
+                      price={item.price}
+                      imageUrl={item.mainImageUrl}
+                      category={item.category}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.emptyText}>Пока нет похожих картин.</p>
+            )}
+          </details>
         </div>
       </Container>
     </section>

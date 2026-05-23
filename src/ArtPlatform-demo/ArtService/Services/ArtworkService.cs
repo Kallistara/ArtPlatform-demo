@@ -554,7 +554,7 @@ namespace ArtService.Services
             await using var stream = File.Create(filePath);
             await file.CopyToAsync(stream);
 
-            return $"/uploads/artwork/{fileName}";
+            return $"/uploads/artworks/{fileName}";
         }
 
         /// <summary>
