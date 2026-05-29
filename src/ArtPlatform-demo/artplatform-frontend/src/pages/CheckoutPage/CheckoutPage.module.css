@@ -1,0 +1,125 @@
+.page {
+  padding: 28px 0 72px;
+}
+
+.header {
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.05;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  opacity: 0.72;
+  max-width: 70ch;
+}
+
+.form {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: white;
+  font: inherit;
+  outline: none;
+}
+
+.textarea {
+  min-height: 120px;
+  padding-top: 12px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+}
+
+.error {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #b91c1c;
+}
+
+.note {
+  margin-top: 16px;
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.button,
+.secondaryButton {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button {
+  border: 0;
+  background: #111827;
+  color: white;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: transparent;
+  color: inherit;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fullWidth {
+    grid-column: auto;
+  }
+}

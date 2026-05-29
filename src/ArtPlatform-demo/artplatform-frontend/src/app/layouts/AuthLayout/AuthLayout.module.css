@@ -1,11 +1,25 @@
 .layout {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 24px 80px;
 }
 
 .card {
-  width: 100%;
-  max-width: 480px;
+  width: min(100%, 980px);
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .main {
+    padding: 28px 16px 56px;
+  }
 }

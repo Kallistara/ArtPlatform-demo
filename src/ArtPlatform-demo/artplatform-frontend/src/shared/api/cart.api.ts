@@ -24,7 +24,7 @@ export function getMyCart() {
 }
 
 export function addToCart(artworkId: string) {
-  return request<{ message: string; result: CartItem }>(`/cart/me/${artworkId}`, {
+  return request<CartItem>(`/cart/me/${artworkId}`, {
     method: 'POST',
   });
 }

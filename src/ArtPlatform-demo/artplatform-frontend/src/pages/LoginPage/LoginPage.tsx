@@ -1,28 +1,52 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
 import styles from './LoginPage.module.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('sessionExpired') === '1') {
+      setSessionExpired(true);
+    }
+  }, [searchParams]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername || !password) {
+      setError('Заполните логин и пароль');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await login(username.trim(), password);
+      await login(trimmedUsername, password);
       navigate('/account', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка входа');
+      const message = err instanceof Error ? err.message : 'Ошибка входа';
+
+      if (message.toLowerCase().includes('неверный логин или пароль')) {
+        setError('Неверный логин или пароль');
+      } else if (message.toLowerCase().includes('session') || message.toLowerCase().includes('сессия')) {
+        setError('Сессия истекла. Войдите снова.');
+      } else {
+        setError('Ошибка входа');
+      }
     } finally {
       setLoading(false);
     }
@@ -30,9 +54,12 @@ export function LoginPage() {
 
   return (
     <div className={styles.page}>
-      <Link to="/" className={styles.backLink} aria-label="Назад на главную">
-        ←
-      </Link>
+      {sessionExpired ? (
+        <StateMessage
+          title="Сессия истекла"
+          description="Ваш вход устарел. Пожалуйста, войдите в аккаунт снова."
+        />
+      ) : null}
 
       <h1 className={styles.title}>Вход</h1>
 

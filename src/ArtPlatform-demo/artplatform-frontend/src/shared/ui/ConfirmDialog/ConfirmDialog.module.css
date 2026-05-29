@@ -48,3 +48,21 @@
   color: #fff;
   border-color: #111;
 }
+
+.dialog {
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.06);
+  font-size: 22px;
+  line-height: 34px;
+  cursor: pointer;
+}

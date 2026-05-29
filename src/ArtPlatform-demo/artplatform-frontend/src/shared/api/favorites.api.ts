@@ -23,7 +23,7 @@ export function getMyFavorites() {
 }
 
 export function addToFavorites(artworkId: string) {
-  return request<{ message: string; favorite: FavoriteItem }>(`/favorites/me/${artworkId}`, {
+  return request<FavoriteItem>(`/favorites/me/${artworkId}`, {
     method: 'POST',
   });
 }

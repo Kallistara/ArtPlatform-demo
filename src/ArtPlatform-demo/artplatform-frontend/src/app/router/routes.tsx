@@ -14,6 +14,7 @@ import { AdminPage } from '../../pages/AdminPage/AdminPage';
 import { CreateArtworkPage } from '../../pages/CreateArtworkPage/CreateArtworkPage';
 import { EditArtworkPage } from '../../pages/EditArtworkPage/EditArtworkPage';
 import { ArtistPage } from '../../pages/ArtistPage/ArtistPage';
+import { CheckoutPage } from '../../pages/CheckoutPage/CheckoutPage';
 
 export function AppRoutes() {
   return (
@@ -23,6 +24,11 @@ export function AppRoutes() {
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/artworks/:id" element={<ArtworkPage />} />
         <Route path="/artists/:userId" element={<ArtistPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+
+        <Route path="/artists/:userId" element={<ArtistPage />} />
+        <Route path="/artworks/create" element={<CreateArtworkPage />} />
+        <Route path="/artworks/edit/:id" element={<EditArtworkPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/favorites" element={<FavoritesPage />} />

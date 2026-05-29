@@ -1,4 +1,5 @@
 import { request } from './client';
+import { ARTWORK_CATEGORIES, ARTWORK_STYLES, ARTWORK_MATERIALS } from '../config/ArtworkOptions';
 
 export type Artwork = {
   id: string;
@@ -90,3 +91,9 @@ export function deleteArtwork(artworkId: string) {
     method: 'DELETE',
   });
 }
+
+export const artworkOptions = {
+  categories: ARTWORK_CATEGORIES,
+  styles: ARTWORK_STYLES,
+  materials: ARTWORK_MATERIALS,
+} as const;

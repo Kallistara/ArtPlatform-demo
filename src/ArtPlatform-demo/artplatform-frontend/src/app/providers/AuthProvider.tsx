@@ -7,11 +7,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { AuthResponse } from '../../shared/api/auth.api';
-import {
-  login as loginRequest,
-  register as registerRequest,
-} from '../../shared/api/auth.api';
+import { login as loginRequest, register as registerRequest } from '../../shared/api/auth.api';
 import { getMyProfile } from '../../shared/api/profile.api';
 
 type AuthUser = {
@@ -35,6 +33,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const STORAGE_KEY = 'artplatform_auth';
+const SESSION_EXPIRED_EVENT = 'artplatform:session-expired';
 
 function toUser(data: AuthResponse): AuthUser {
   return {
@@ -61,6 +60,7 @@ function readStoredUser(): AuthUser | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
 
   useEffect(() => {
@@ -68,56 +68,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(STORAGE_KEY);
   }, [user]);
 
-  const refreshUser = useCallback(async (tokenOverride?: string) => {
-    const token = tokenOverride ?? readStoredUser()?.token ?? user?.token;
-    if (!token) return;
+  const handleSessionExpired = useCallback(() => {
+    setUser(null);
 
-    let attempt = 0;
-    let lastError: unknown = null;
+    if (window.location.pathname !== '/login') {
+      navigate('/login?sessionExpired=1', { replace: true });
+    }
+  }, [navigate]);
 
-    while (attempt < 8) {
-      try {
-        const profile = await getMyProfile(token);
+  useEffect(() => {
+    const onExpired = () => handleSessionExpired();
 
-        setUser((prev) =>
-          prev
-            ? {
-                ...prev,
-                userId: profile.userId,
-                role: profile.role,
-                username: profile.userName,
-                displayName: profile.displayName,
-              }
-            : prev
-        );
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, [handleSessionExpired]);
 
-        return;
-      } catch (error) {
-        lastError = error;
+  const refreshUser = useCallback(
+    async (tokenOverride?: string) => {
+      const token = tokenOverride ?? user?.token ?? readStoredUser()?.token;
+      if (!token) return;
 
-        const message = error instanceof Error ? error.message.toLowerCase() : '';
-        if (message.includes('401') || message.includes('403')) {
-          throw error;
+      let attempt = 0;
+      let lastError: unknown = null;
+
+      while (attempt < 8) {
+        try {
+          const profile = await getMyProfile(token);
+
+          setUser((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  userId: profile.userId,
+                  role: profile.role,
+                  username: profile.userName,
+                  displayName: profile.displayName,
+                }
+              : prev
+          );
+
+          return;
+        } catch (error) {
+          lastError = error;
+
+          const message = error instanceof Error ? error.message.toLowerCase() : '';
+          if (message.includes('401') || message.includes('403') || message.includes('сессия истекла')) {
+            handleSessionExpired();
+            return;
+          }
+
+          await sleep(250 + attempt * 250);
+          attempt += 1;
         }
-
-        await sleep(250 + attempt * 250);
-        attempt += 1;
       }
-    }
 
-    if (lastError instanceof Error) {
-      console.warn('Profile sync failed after retries:', lastError.message);
-    }
-  }, [user?.token]);
+      if (lastError instanceof Error) {
+        console.warn('Profile sync failed after retries:', lastError.message);
+      }
+    },
+    [handleSessionExpired, user?.token]
+  );
 
   const login = useCallback(
     async (username: string, password: string) => {
       const res = await loginRequest({ username, password });
       const nextUser = toUser(res);
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
       setUser(nextUser);
-
       await refreshUser(nextUser.token);
     },
     [refreshUser]
@@ -126,13 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (username: string, password: string, confirmPassword: string) => {
       await registerRequest({ username, password, confirmPassword });
-
       const res = await loginRequest({ username, password });
       const nextUser = toUser(res);
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
       setUser(nextUser);
-
       await refreshUser(nextUser.token);
     },
     [refreshUser]

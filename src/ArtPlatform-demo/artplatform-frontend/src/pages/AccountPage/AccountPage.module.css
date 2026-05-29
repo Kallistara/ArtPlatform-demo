@@ -1,25 +1,845 @@
-/* src/pages/AccountPage/AccountPage.module.css */
-.page { padding: 48px 24px 80px; }
-.header { display:flex; justify-content:space-between; gap:24px; align-items:flex-start; margin-bottom:24px; }
-.title { margin:0 0 8px; font-size:40px; }
-.subtitle { margin:0; color:#666; }
-.actions { display:flex; gap:12px; flex-wrap:wrap; }
-.actionButton,.button,.dangerButton { min-height:44px; border-radius:12px; padding:0 16px; cursor:pointer; border:1px solid #ddd; background:#fff; }
-.button { background:#111; color:#fff; border-color:#111; }
-.dangerButton { background:#fff5f5; border-color:#f2b8b5; color:#b42318; }
-.summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
-.summaryItem,.card,.form { border:1px solid #eee; border-radius:20px; background:#fff; padding:20px; }
-.summaryItem span,.contactRow span { display:block; color:#666; font-size:13px; margin-bottom:6px; }
-.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
-.sectionTitle { margin:0 0 16px; font-size:22px; }
-.text { margin:0; line-height:1.7; color:#333; }
-.contactList { display:grid; gap:14px; }
-.contactRow { display:flex; justify-content:space-between; gap:16px; }
-.form { display:grid; gap:16px; margin-bottom:24px; }
-.label { display:grid; gap:8px; color:#333; }
-.input,.textarea { width:100%; min-height:46px; padding:0 14px; border:1px solid #ddd; border-radius:12px; }
-.textarea { min-height:120px; padding:12px 14px; resize:vertical; }
-.contactGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.adminOnly { margin-top:8px; }
-.metaLine { margin-top:20px; color:#777; }
-@media (max-width: 960px){ .summary,.grid,.contactGrid { grid-template-columns:1fr; } .header{flex-direction:column;} }
+.page {
+  padding: 28px 0 72px;
+}
+
+.profileCard {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+  align-items: center;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #111827;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.08), rgba(17, 24, 39, 0.03));
+  border: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.profileBody {
+  min-width: 0;
+}
+
+.profileTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.handle {
+  font-size: 14px;
+  opacity: 0.62;
+  margin-bottom: 6px;
+}
+
+.name {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.05;
+}
+
+.metaLine {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.72;
+}
+
+.roleBadge {
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(17, 24, 39, 0.06);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primaryButton {
+  border: 0;
+  background: #111827;
+  color: white;
+}
+
+.primaryButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: transparent;
+  color: inherit;
+}
+
+.ghostButton {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.72;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.bio {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.88;
+  white-space: pre-wrap;
+}
+
+.contacts {
+  display: grid;
+  gap: 12px;
+}
+
+.contactRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.contactRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.contactRow span {
+  opacity: 0.62;
+}
+
+.contactRow strong {
+  text-align: right;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.emptyText {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal {
+  width: min(760px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.modalForm {
+  display: grid;
+  gap: 12px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 22px;
+}
+
+.modalSubtitle {
+  margin: 8px 0 0;
+  opacity: 0.72;
+}
+
+.modalClose {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.06);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 38px;
+}
+
+.modalForm {
+  display: grid;
+  gap: 14px;
+}
+
+.groupTitle {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: white;
+  font: inherit;
+  outline: none;
+}
+
+.textarea {
+  min-height: 120px;
+  padding-top: 12px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+}
+
+.error {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #b91c1c;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+@media (max-width: 860px) {
+  .profileCard {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .avatar {
+    width: 92px;
+    height: 92px;
+    font-size: 28px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileTop {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .card,
+  .profileCard {
+    padding: 18px;
+  }
+
+  .modal {
+    padding: 18px;
+  }
+
+  .modalActions,
+  .actions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .ghostButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.artistControls {
+  display: flex;
+  margin-top: 18px;
+}
+
+.artistCreateButton {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: #111827;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.portfolio {
+  margin-top: 24px;
+}
+
+.portfolioHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.portfolioHint {
+  font-size: 13px;
+  opacity: 0.62;
+}
+
+.portfolioGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.page {
+  padding: 28px 0 72px;
+}
+
+.profileCard {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+  align-items: center;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 36px;
+  font-weight: 800;
+  color: #111827;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.08), rgba(17, 24, 39, 0.03));
+  border: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.profileBody {
+  min-width: 0;
+}
+
+.profileTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.handle {
+  font-size: 14px;
+  opacity: 0.62;
+  margin-bottom: 6px;
+}
+
+.name {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.05;
+}
+
+.metaLine {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.72;
+}
+
+.roleBadge {
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(17, 24, 39, 0.06);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton,
+.artistCreateButton,
+.workEditButton,
+.workDeleteButton {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.primaryButton {
+  border: 0;
+  background: #111827;
+  color: white;
+}
+
+.primaryButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: transparent;
+  color: inherit;
+}
+
+.ghostButton {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.72;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.bio {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.88;
+  white-space: pre-wrap;
+}
+
+.contacts {
+  display: grid;
+  gap: 12px;
+}
+
+.contactRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.contactRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.contactRow span {
+  opacity: 0.62;
+}
+
+.contactRow strong {
+  text-align: right;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.emptyText {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.artistControls {
+  display: flex;
+  margin-top: 18px;
+}
+
+.artistCreateButton {
+  border: 0;
+  background: #111827;
+  color: white;
+}
+
+.portfolio {
+  margin-top: 24px;
+}
+
+.portfolioHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.portfolioHint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  opacity: 0.62;
+}
+
+.portfolioGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workCard {
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  border-radius: 22px;
+  background: white;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+}
+
+.workPreview {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  padding: 14px;
+}
+
+.workImageWrap {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f3f4f6;
+  aspect-ratio: 1 / 1;
+}
+
+.workImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.workInfo {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.workTopRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.workCategory {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.68;
+}
+
+.workPrice {
+  margin: 0;
+  font-weight: 800;
+}
+
+.workTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.workMeta {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.workActions {
+  display: flex;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+.workEditButton {
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: transparent;
+  color: inherit;
+}
+
+.workDeleteButton {
+  border: 0;
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+.emptyPortfolio {
+  margin-top: 8px;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal {
+  width: min(640px, 100%);
+  max-height: min(86vh, 900px);
+  overflow: auto;
+  background: white;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 22px;
+}
+
+.modalSubtitle {
+  margin: 8px 0 0;
+  opacity: 0.72;
+}
+
+.modalClose {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.06);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 38px;
+}
+
+.modalForm {
+  display: grid;
+  gap: 14px;
+}
+
+.groupTitle {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: white;
+  font: inherit;
+  outline: none;
+}
+
+.textarea {
+  min-height: 120px;
+  padding-top: 12px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+}
+
+.error {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #b91c1c;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+@media (max-width: 1100px) {
+  .portfolioGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .profileCard {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .avatar {
+    width: 92px;
+    height: 92px;
+    font-size: 28px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileTop,
+  .portfolioHeader {
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .workPreview {
+    grid-template-columns: 1fr;
+  }
+
+  .workImageWrap {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (max-width: 560px) {
+  .card,
+  .profileCard,
+  .workPreview {
+    padding: 18px;
+  }
+
+  .modal {
+    padding: 18px;
+  }
+
+  .modalActions,
+  .actions,
+  .workActions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .ghostButton,
+  .artistCreateButton,
+  .workEditButton,
+  .workDeleteButton {
+    width: 100%;
+  }
+}

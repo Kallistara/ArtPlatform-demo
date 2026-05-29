@@ -1,0 +1,269 @@
+.root {
+  width: min(100%, 1240px);
+  margin: 0 auto;
+  padding: 28px 24px 72px;
+  display: grid;
+  gap: 32px;
+}
+
+.section {
+  display: grid;
+  gap: 18px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 1.05;
+  max-width: 760px;
+}
+
+.link {
+  white-space: nowrap;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.collectionsGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.4fr 1fr 1.2fr;
+  grid-auto-rows: 160px;
+}
+
+.collectionTile {
+  position: relative;
+  border-radius: 26px;
+  overflow: hidden;
+  text-decoration: none;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  background:
+    linear-gradient(180deg, rgba(17,24,39,0.02), rgba(17,24,39,0.72)),
+    linear-gradient(135deg, rgba(17,24,39,0.8), rgba(99,102,241,0.55));
+}
+
+.tileWide {
+  grid-column: span 2;
+}
+
+.tileTall {
+  grid-row: span 2;
+  min-height: 334px;
+}
+
+.tileSmall {
+  background:
+    linear-gradient(180deg, rgba(17,24,39,0.02), rgba(17,24,39,0.72)),
+    linear-gradient(135deg, rgba(17,24,39,0.82), rgba(234,88,12,0.52));
+}
+
+.collectionTitle {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.collectionSubtitle {
+  margin-top: 6px;
+  opacity: 0.86;
+}
+
+.worksGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.artistsGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.artistCard {
+  text-decoration: none;
+  color: inherit;
+  border-radius: 24px;
+  padding: 18px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: rgba(17, 24, 39, 0.04);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.artistAvatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 24, 39, 0.12);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.artistName {
+  font-weight: 800;
+}
+
+.artistHandle,
+.artistBio {
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.storySection {
+  display: grid;
+  grid-template-columns: 1.5fr 0.9fr;
+  gap: 16px;
+}
+
+.storyCard,
+.storyStats {
+  border-radius: 28px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.storyCard {
+  padding: 26px;
+  display: grid;
+  gap: 14px;
+}
+
+.storyTitle {
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.08;
+}
+
+.storyText {
+  margin: 0;
+  max-width: 64ch;
+  line-height: 1.7;
+  opacity: 0.82;
+}
+
+.storyActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  border-radius: 999px;
+  padding: 12px 18px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.primaryBtn {
+  background: #111827;
+  color: white;
+}
+
+.secondaryBtn {
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  color: inherit;
+}
+
+.storyStats {
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.stat {
+  padding: 16px;
+  border-radius: 20px;
+  background: white;
+  border: 1px solid rgba(128, 128, 128, 0.12);
+  display: grid;
+  gap: 4px;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.statLabel {
+  opacity: 0.72;
+}
+
+.bottomStrip {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bottomItem {
+  border-radius: 22px;
+  padding: 18px;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: rgba(17, 24, 39, 0.04);
+  display: grid;
+  gap: 6px;
+}
+
+.bottomItem span {
+  opacity: 0.72;
+}
+
+@media (max-width: 1100px) {
+  .collectionsGrid,
+  .storySection,
+  .bottomStrip,
+  .worksGrid,
+  .artistsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tileWide,
+  .tileTall {
+    grid-column: auto;
+    grid-row: auto;
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 700px) {
+  .root {
+    padding: 22px 16px 64px;
+  }
+
+  .sectionHead {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .collectionsGrid,
+  .storySection,
+  .bottomStrip,
+  .worksGrid,
+  .artistsGrid {
+    grid-template-columns: 1fr;
+  }
+}

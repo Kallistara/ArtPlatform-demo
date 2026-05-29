@@ -1,17 +1,44 @@
 .search {
+  display: flex;
+  gap: 10px;
   width: 100%;
 }
 
 .input {
-  width: 100%;
-  min-height: 52px;
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
   padding: 0 16px;
-  border: 1px solid #ddd;
-  border-radius: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: white;
+  font: inherit;
   outline: none;
-  font-size: 16px;
 }
 
 .input:focus {
-  border-color: #111;
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+}
+
+.button {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: #111827;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .search {
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
 }

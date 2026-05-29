@@ -1,50 +1,104 @@
 .card {
-  height: 100%;
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(128, 128, 128, 0.14);
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
 }
 
 .link {
   display: block;
   color: inherit;
   text-decoration: none;
-  height: 100%;
 }
 
 .imageWrap {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 0.92;
+  background: #f1f2f4;
   overflow: hidden;
-  background: #f3f3f3;
+  display: grid;
+  place-items: center;
+  padding: 12px;
 }
 
 .image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  transition: transform 0.28s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.05);
 }
 
 .body {
-  padding: 16px;
+  padding: 12px 12px 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
 }
 
 .category {
-  margin: 0 0 8px;
-  font-size: 12px;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #777;
-}
-
-.title {
-  margin: 0 0 8px;
-  font-size: 18px;
-}
-
-.artist {
-  margin: 0 0 10px;
-  color: #666;
+  opacity: 0.62;
 }
 
 .price {
   margin: 0;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.18;
+}
+
+.artist {
+  margin: 0;
+  opacity: 0.74;
+  font-size: 13px;
+}
+
+.availability {
+  margin-top: 2px;
+  font-size: 12px;
+  opacity: 0.8;
+  text-align: right;
+}
+
+.favoriteButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 36px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.favoriteButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }

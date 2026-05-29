@@ -1,12 +1,11 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transform: translateY(0);
-  transition: transform 0.25s ease;
+  z-index: 50;
+  width: 100%;
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.14);
 }
 
 .hidden {
@@ -14,59 +13,216 @@
 }
 
 .inner {
-  max-width: 1400px;
+  width: min(100%, 1380px);
   margin: 0 auto;
-  padding: 18px 24px;
-  display: flex;
+  min-height: 84px;
+  padding: 14px 24px;
+  display: grid;
+  grid-template-columns: auto minmax(320px, 1fr) auto;
+  gap: 18px;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
 }
 
 .logo {
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   text-decoration: none;
-  color: #111;
-  letter-spacing: 0.04em;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.searchForm {
+  width: 100%;
+  display: flex;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(128, 128, 128, 0.24);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  outline: none;
+  font: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.46);
+}
+
+.searchInput:focus {
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08);
+  transform: translateY(-1px);
 }
 
 .nav {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
   align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .navLink {
   text-decoration: none;
-  color: #222;
-  transition: opacity 0.2s ease;
-}
-
-.navLink:hover {
-  opacity: 0.7;
+  color: inherit;
+  opacity: 0.78;
+  font-weight: 600;
 }
 
 .active {
-  text-decoration: underline;
-  text-underline-offset: 6px;
-}
-
-.logoutButton {
-  border: 1px solid #ddd;
-  background: #fff;
-  color: #111;
-  border-radius: 12px;
-  min-height: 36px;
-  padding: 0 14px;
-  cursor: pointer;
+  opacity: 1;
 }
 
 .userBadge {
-  color: #666;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.08);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.logoutButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #111827;
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .inner {
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .inner {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .nav {
+    gap: 10px;
+  }
+}
+
+.userChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(17, 24, 39, 0.05);
+}
+
+.userAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
   font-size: 12px;
-  max-width: 180px;
+  font-weight: 800;
+  background: rgba(17, 24, 39, 0.12);
+}
+
+.userName {
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.createButton {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  text-decoration: none;
+  background: rgba(17, 24, 39, 0.08);
+  color: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  flex: 0 0 auto;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.createButton:hover {
+  background: rgba(17, 24, 39, 0.14);
+  transform: translateY(-1px);
+}
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 380px;
+  max-width: 520px;
+  margin: 0 18px;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  background: white;
+  font: inherit;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+}
+
+.searchButton {
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.createButton {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  text-decoration: none;
+  background: rgba(17, 24, 39, 0.08);
+  color: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  flex: 0 0 auto;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.createButton:hover {
+  background: rgba(17, 24, 39, 0.14);
+  transform: translateY(-1px);
 }

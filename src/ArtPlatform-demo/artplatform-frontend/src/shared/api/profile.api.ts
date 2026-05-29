@@ -3,7 +3,6 @@ import { request } from './client';
 export type ContactInfo = {
   email?: string | null;
   website?: string | null;
-  telegram?: string | null;
   otherContact?: string | null;
 };
 
@@ -17,7 +16,6 @@ export type UserProfile = {
   createdAt: string;
   updatedAt: string;
   role: 'Unauthorized' | 'User' | 'Artist' | 'Admin';
-  avatarUrl?: string | null;
 };
 
 export type UpdateProfileRequest = {
@@ -26,9 +24,17 @@ export type UpdateProfileRequest = {
   contact?: ContactInfo;
 };
 
+function authHeaders(token?: string) {
+  if (!token) return undefined;
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export function getMyProfile(authToken?: string) {
   return request<UserProfile>('/profile/me', {
-    authToken,
+    headers: authHeaders(authToken),
   });
 }
 

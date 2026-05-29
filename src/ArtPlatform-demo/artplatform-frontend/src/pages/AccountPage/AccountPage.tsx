@@ -1,55 +1,225 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container } from '../../shared/ui/Container/Container';
 import { StateMessage } from '../../shared/ui/StateMessage/StateMessage';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog/ConfirmDialog';
+import { useToast } from '../../shared/ui/Notifications/ToastProvider';
+import { useAuth } from '../../app/providers/AuthProvider';
 import { changePassword } from '../../shared/api/auth.api';
 import {
   deleteMyProfile,
   getMyProfile,
   updateMyProfile,
+  type ContactInfo,
   type UserProfile,
 } from '../../shared/api/profile.api';
-import {
-  deleteArtwork,
-  getArtworksByArtistId,
-  type Artwork,
-} from '../../shared/api/artworks.api';
-import { useAuth } from '../../app/providers/AuthProvider';
-import { toImageUrl } from '../../shared/ib/image';
+import { deleteArtwork, getArtworksByArtistId, type Artwork } from '../../shared/api/artworks.api';
+import { toImageUrl } from '../../shared/lib/image';
 import styles from './AccountPage.module.css';
 
-const emptyContact = { email: '', website: '', telegram: '', otherContact: '' };
+type ProfileDraft = {
+  displayName: string;
+  bio: string;
+  email: string;
+  webSite: string;
+  otherContacts: string;
+};
+
+type ProfileErrors = Partial<Record<keyof ProfileDraft, string>>;
+
+type PasswordDraft = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+type PasswordErrors = Partial<Record<keyof PasswordDraft, string>>;
+
+const emptyDraft: ProfileDraft = {
+  displayName: '',
+  bio: '',
+  email: '',
+  webSite: '',
+  otherContacts: '',
+};
+
+const emptyPassword: PasswordDraft = {
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+};
+
+function formatDate(value?: string) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' }).format(date);
+}
+
+function getInitials(name?: string, fallback = '?') {
+  const source = (name ?? '').trim();
+  if (!source) return fallback;
+
+  const parts = source.split(/\s+/).filter(Boolean);
+  const letters = parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  return letters || fallback;
+}
+
+function validateProfile(draft: ProfileDraft): ProfileErrors {
+  const errors: ProfileErrors = {};
+  const displayName = draft.displayName.trim();
+  const bio = draft.bio.trim();
+  const email = draft.email.trim();
+  const webSite = draft.webSite.trim();
+  const otherContacts = draft.otherContacts.trim();
+
+  if (!displayName) {
+    errors.displayName = 'Укажите отображаемое имя.';
+  } else if (displayName.length < 3) {
+    errors.displayName = 'Минимум 3 символа.';
+  } else if (displayName.length > 50) {
+    errors.displayName = 'Максимум 50 символов.';
+  } else if (!/^[a-zA-Z0-9_а-яА-ЯёЁ\s-]+$/.test(displayName)) {
+    errors.displayName = 'Только буквы, цифры, пробел, _ и -.';
+  }
+
+  if (bio.length > 500) {
+    errors.bio = 'Максимум 500 символов.';
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Введите корректный email.';
+  }
+
+  if (webSite) {
+    try {
+      // eslint-disable-next-line no-new
+      new URL(webSite.startsWith('http') ? webSite : `https://${webSite}`);
+    } catch {
+      errors.webSite = 'Введите корректный URL.';
+    }
+  }
+
+  if (otherContacts.length > 120) {
+    errors.otherContacts = 'Максимум 120 символов.';
+  }
+
+  return errors;
+}
+
+function validatePassword(draft: PasswordDraft): PasswordErrors {
+  const errors: PasswordErrors = {};
+
+  if (!draft.currentPassword.trim()) {
+    errors.currentPassword = 'Введите текущий пароль.';
+  }
+
+  if (!draft.newPassword.trim()) {
+    errors.newPassword = 'Введите новый пароль.';
+  } else if (draft.newPassword.length < 6) {
+    errors.newPassword = 'Пароль должен содержать минимум 6 символов.';
+  }
+
+  if (!draft.confirmPassword.trim()) {
+    errors.confirmPassword = 'Подтвердите новый пароль.';
+  } else if (draft.confirmPassword !== draft.newPassword) {
+    errors.confirmPassword = 'Пароли не совпадают.';
+  }
+
+  return errors;
+}
+
+function ModalShell({
+  open,
+  title,
+  subtitle,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  subtitle?: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className={styles.modalBackdrop} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div>
+            <h3 className={styles.modalTitle}>{title}</h3>
+            {subtitle ? <p className={styles.modalSubtitle}>{subtitle}</p> : null}
+          </div>
+          <button type="button" className={styles.modalClose} onClick={onClose}>
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function AccountPage() {
   const navigate = useNavigate();
-  const { user, refreshUser, logout } = useAuth();
+  const { refreshUser, logout, user } = useAuth();
+  const { success, error: toastError } = useToast();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState('');
-  const [editMode, setEditMode] = useState(false);
-  const [passwordMode, setPasswordMode] = useState(false);
 
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [contact, setContact] = useState(emptyContact);
+  const [artistWorks, setArtistWorks] = useState<Artwork[]>([]);
+  const [loadingWorks, setLoadingWorks] = useState(false);
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [deleteProfileOpen, setDeleteProfileOpen] = useState(false);
+  const [deleteArtworkTarget, setDeleteArtworkTarget] = useState<Artwork | null>(null);
 
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [profileDraft, setProfileDraft] = useState<ProfileDraft>(emptyDraft);
+  const [profileErrors, setProfileErrors] = useState<ProfileErrors>({});
+  const [profileTouched, setProfileTouched] = useState<Record<keyof ProfileDraft, boolean>>({
+    displayName: false,
+    bio: false,
+    email: false,
+    webSite: false,
+    otherContacts: false,
+  });
   const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletingProfile, setDeletingProfile] = useState(false);
 
-  const [myArtworks, setMyArtworks] = useState<Artwork[]>([]);
-  const [loadingArtworks, setLoadingArtworks] = useState(false);
-  const [artworkDeleteTarget, setArtworkDeleteTarget] = useState<Artwork | null>(null);
-  const [deletingArtwork, setDeletingArtwork] = useState(false);
+  const [passwordDraft, setPasswordDraft] = useState<PasswordDraft>(emptyPassword);
+  const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({});
+  const [passwordTouched, setPasswordTouched] = useState<Record<keyof PasswordDraft, boolean>>({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
+
+  const handleBack = () => {
+    if (from) {
+      navigate(from);
+      return;
+    }
+
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/catalog', { replace: true });
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -57,18 +227,10 @@ export function AccountPage() {
     async function load() {
       try {
         setLoadingProfile(true);
+        setProfileError('');
         const data = await getMyProfile();
         if (ignore) return;
-
         setProfile(data);
-        setDisplayName(data.displayName ?? '');
-        setBio(data.bio ?? '');
-        setContact({
-          email: data.contact?.email ?? '',
-          website: data.contact?.website ?? '',
-          telegram: data.contact?.telegram ?? '',
-          otherContact: data.contact?.otherContact ?? '',
-        });
       } catch (e) {
         if (!ignore) {
           setProfileError(e instanceof Error ? e.message : 'Ошибка загрузки профиля');
@@ -86,133 +248,203 @@ export function AccountPage() {
   }, []);
 
   useEffect(() => {
+    if (!profile || profile.role !== 'Artist') return;
+
     let ignore = false;
 
-    async function loadMyArtworks() {
-      if (!profile || profile.role !== 'Artist') {
-        setMyArtworks([]);
-        return;
-      }
-
+    async function loadWorks() {
       try {
-        setLoadingArtworks(true);
-        const items = await getArtworksByArtistId(profile.userId);
-        if (!ignore) setMyArtworks(items);
+        setLoadingWorks(true);
+        const works = await getArtworksByArtistId(profile.userId);
+        if (!ignore) setArtistWorks(works);
       } catch {
-        if (!ignore) setMyArtworks([]);
+        if (!ignore) setArtistWorks([]);
       } finally {
-        if (!ignore) setLoadingArtworks(false);
+        if (!ignore) setLoadingWorks(false);
       }
     }
 
-    void loadMyArtworks();
+    void loadWorks();
 
     return () => {
       ignore = true;
     };
   }, [profile]);
 
-  const filledContact = useMemo(
-    () => Object.entries(contact).filter(([, v]) => String(v ?? '').trim() !== ''),
-    [contact]
+  const isArtist = profile?.role === 'Artist';
+  const isAdmin = profile?.role === 'Admin';
+
+  const roleLabel = useMemo(() => {
+    const role = profile?.role;
+    if (role === 'Admin') return 'Администратор';
+    if (role === 'Artist') return 'Художник';
+    return '';
+  }, [profile?.role]);
+
+  const initials = useMemo(() => {
+    return getInitials(profile?.displayName || profile?.userName, 'U');
+  }, [profile?.displayName, profile?.userName]);
+
+  const contactItems = useMemo(
+    () =>
+      [
+        profile?.contact?.email ? { label: 'Email', value: profile.contact.email } : null,
+        profile?.contact?.website ? { label: 'Web-сайт', value: profile.contact.website } : null,
+        profile?.contact?.otherContact
+          ? { label: 'Другие контакты', value: profile.contact.otherContact }
+          : null,
+      ].filter(Boolean) as Array<{ label: string; value: string }>,
+    [profile]
   );
 
-  const isArtist = profile?.role === 'Artist' || user?.role === 'Artist';
+  const openEdit = () => {
+    if (!profile) return;
 
-  const refreshMyArtworks = async () => {
-    if (!profile || profile.role !== 'Artist') return;
-    const items = await getArtworksByArtistId(profile.userId);
-    setMyArtworks(items);
+    setProfileDraft({
+      displayName: profile.displayName ?? '',
+      bio: profile.bio ?? '',
+      email: profile.contact?.email ?? '',
+      webSite: profile.contact?.website ?? '',
+      otherContacts: profile.contact?.otherContact ?? '',
+    });
+
+    setProfileErrors({});
+    setProfileTouched({
+      displayName: false,
+      bio: false,
+      email: false,
+      webSite: false,
+      otherContacts: false,
+    });
+    setEditOpen(true);
   };
 
-  const onSaveProfile = async (e: React.FormEvent) => {
+  const openPassword = () => {
+    setPasswordDraft(emptyPassword);
+    setPasswordErrors({});
+    setPasswordTouched({
+      currentPassword: false,
+      newPassword: false,
+      confirmPassword: false,
+    });
+    setPasswordOpen(true);
+  };
+
+  const onProfileFieldChange = (field: keyof ProfileDraft, value: string) => {
+    setProfileDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const onProfileFieldBlur = (field: keyof ProfileDraft) => {
+    setProfileTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const onPasswordFieldChange = (field: keyof PasswordDraft, value: string) => {
+    setPasswordDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const onPasswordFieldBlur = (field: keyof PasswordDraft) => {
+    setPasswordTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const submitProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
-    setSavingProfile(true);
+
+    const nextErrors = validateProfile(profileDraft);
+    setProfileErrors(nextErrors);
+    setProfileTouched({
+      displayName: true,
+      bio: true,
+      email: true,
+      webSite: true,
+      otherContacts: true,
+    });
+
+    if (Object.keys(nextErrors).length > 0) {
+      toastError('Ошибка', 'Проверьте поля профиля.');
+      return;
+    }
 
     try {
-      const res = await updateMyProfile({
-        displayName,
-        bio,
-        contact: {
-          email: contact.email || null,
-          website: contact.website || null,
-          telegram: contact.telegram || null,
-          otherContact: contact.otherContact || null,
-        },
-      });
+      setSavingProfile(true);
 
+      const payload = {
+        displayName: profileDraft.displayName.trim(),
+        bio: profileDraft.bio.trim(),
+        contact: {
+          email: profileDraft.email.trim() || null,
+          website: profileDraft.webSite.trim() || null,
+          otherContact: profileDraft.otherContacts.trim() || null,
+        } as ContactInfo,
+      };
+
+      const res = await updateMyProfile(payload);
       setProfile(res.profile);
-      setMessage(res.message);
-      setEditMode(false);
+      setEditOpen(false);
+      success('Профиль', res.message);
       await refreshUser();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка сохранения профиля');
+    } catch (err) {
+      toastError('Ошибка', err instanceof Error ? err.message : 'Не удалось сохранить профиль');
     } finally {
       setSavingProfile(false);
     }
   };
 
-  const onChangePassword = async (e: React.FormEvent) => {
+  const submitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
 
-    if (newPassword !== confirmPassword) {
-      setError('Новый пароль и подтверждение не совпадают');
+    const nextErrors = validatePassword(passwordDraft);
+    setPasswordErrors(nextErrors);
+    setPasswordTouched({
+      currentPassword: true,
+      newPassword: true,
+      confirmPassword: true,
+    });
+
+    if (Object.keys(nextErrors).length > 0) {
+      toastError('Ошибка', 'Проверьте поля смены пароля.');
       return;
     }
 
-    setSavingPassword(true);
-
     try {
-      const res = await changePassword({ currentPassword, newPassword });
-      setMessage(res.message);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setPasswordMode(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка смены пароля');
+      setSavingPassword(true);
+      const res = await changePassword({
+        currentPassword: passwordDraft.currentPassword,
+        newPassword: passwordDraft.newPassword,
+      });
+
+      success('Пароль', res.message);
+      setPasswordOpen(false);
+      setPasswordDraft(emptyPassword);
+      setPasswordErrors({});
+    } catch (err) {
+      toastError('Ошибка', err instanceof Error ? err.message : 'Не удалось сменить пароль');
     } finally {
       setSavingPassword(false);
     }
   };
 
-  const onDeleteProfile = async () => {
-    setDeletingProfile(true);
-    setError('');
-    setMessage('');
-
+  const deleteProfile = async () => {
     try {
       await deleteMyProfile();
       logout();
+      setDeleteProfileOpen(false);
+      success('Профиль', 'Профиль удалён');
       navigate('/', { replace: true });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка удаления профиля');
-    } finally {
-      setDeletingProfile(false);
-      setDeleteOpen(false);
+    } catch (err) {
+      toastError('Ошибка', err instanceof Error ? err.message : 'Не удалось удалить профиль');
     }
   };
 
-  const onDeleteArtwork = async () => {
-    if (!artworkDeleteTarget) return;
-
-    setDeletingArtwork(true);
-    setError('');
-    setMessage('');
+  const deleteArtworkConfirm = async () => {
+    if (!deleteArtworkTarget) return;
 
     try {
-      await deleteArtwork(artworkDeleteTarget.id);
-      setMyArtworks((prev) => prev.filter((item) => item.id !== artworkDeleteTarget.id));
-      setMessage(`Картина "${artworkDeleteTarget.title}" удалена`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка удаления картины');
-    } finally {
-      setDeletingArtwork(false);
-      setArtworkDeleteTarget(null);
+      await deleteArtwork(deleteArtworkTarget.id);
+      setArtistWorks((prev) => prev.filter((item) => item.id !== deleteArtworkTarget.id));
+      success('Картина', 'Картина удалена');
+      setDeleteArtworkTarget(null);
+    } catch (err) {
+      toastError('Ошибка', err instanceof Error ? err.message : 'Не удалось удалить картину');
     }
   };
 
@@ -236,203 +468,292 @@ export function AccountPage() {
     );
   }
 
+  if (!profile) {
+    return (
+      <section className={styles.page}>
+        <Container>
+          <StateMessage title="Профиль не найден" />
+        </Container>
+      </section>
+    );
+  }
+
   return (
     <section className={styles.page}>
       <Container>
-        <div className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Аккаунт</h1>
-            <p className={styles.subtitle}>Профиль пользователя и настройки безопасности</p>
-          </div>
+        <div className={styles.profileCard}>
+          <div className={styles.avatar}>{initials}</div>
 
-          <div className={styles.actions}>
-            <button type="button" className={styles.actionButton} onClick={() => setEditMode((v) => !v)}>
-              {editMode ? 'Скрыть редактирование' : 'Редактировать профиль'}
-            </button>
-            <button type="button" className={styles.actionButton} onClick={() => setPasswordMode((v) => !v)}>
-              {passwordMode ? 'Скрыть смену пароля' : 'Сменить пароль'}
-            </button>
-          </div>
-        </div>
+          <div className={styles.profileBody}>
+            <div className={styles.profileTop}>
+              <div>
+                <div className={styles.handle}>@{profile.userName}</div>
+                <h1 className={styles.name}>{profile.displayName || profile.userName}</h1>
+                <div className={styles.metaLine}>На сайте с {formatDate(profile.createdAt)}</div>
+              </div>
 
-        <div className={styles.summary}>
-          <div className={styles.summaryItem}><span>Username</span><strong>{profile?.userName || '—'}</strong></div>
-          <div className={styles.summaryItem}><span>Display name</span><strong>{profile?.displayName || '—'}</strong></div>
-          <div className={styles.summaryItem}><span>Role</span><strong>{profile?.role || '—'}</strong></div>
-          <div className={styles.summaryItem}><span>Created</span><strong>{profile?.createdAt || '—'}</strong></div>
-          <div className={styles.summaryItem}><span>Updated</span><strong>{profile?.updatedAt || '—'}</strong></div>
-          <div className={styles.summaryItem}><span>User ID</span><strong>{user?.userId || '—'}</strong></div>
+              {roleLabel ? <span className={styles.roleBadge}>{roleLabel}</span> : null}
+            </div>
+
+            <div className={styles.actions}>
+              <button type="button" className={styles.primaryButton} onClick={openEdit}>
+                Редактировать профиль
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={openPassword}>
+                Сменить пароль
+              </button>
+              <button type="button" className={styles.ghostButton} onClick={() => setDeleteProfileOpen(true)}>
+                Удалить профиль
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className={styles.grid}>
           <section className={styles.card}>
             <h2 className={styles.sectionTitle}>О себе</h2>
-            <p className={styles.text}>{profile?.bio?.trim() ? profile.bio : '—'}</p>
+            <p className={styles.bio}>{profile.bio?.trim() ? profile.bio : 'Пока ничего не написано.'}</p>
           </section>
 
           <section className={styles.card}>
             <h2 className={styles.sectionTitle}>Контакты</h2>
-            <div className={styles.contactList}>
-              <div className={styles.contactRow}><span>Email</span><strong>{profile?.contact?.email || '—'}</strong></div>
-              <div className={styles.contactRow}><span>Website</span><strong>{profile?.contact?.website || '—'}</strong></div>
-              <div className={styles.contactRow}><span>Telegram</span><strong>{profile?.contact?.telegram || '—'}</strong></div>
-              <div className={styles.contactRow}><span>Other</span><strong>{profile?.contact?.otherContact || '—'}</strong></div>
-            </div>
+
+            {contactItems.length > 0 ? (
+              <div className={styles.contacts}>
+                {contactItems.map((item) => (
+                  <div key={item.label} className={styles.contactRow}>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.emptyText}>Контакты пока не заполнены.</p>
+            )}
           </section>
         </div>
 
-        {editMode && (
-          <form className={styles.form} onSubmit={onSaveProfile}>
-            <h2 className={styles.sectionTitle}>Редактирование профиля</h2>
-
-            <label className={styles.label}>
-              Display name
-              <input className={styles.input} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-            </label>
-
-            <label className={styles.label}>
-              Bio
-              <textarea className={styles.textarea} value={bio} onChange={(e) => setBio(e.target.value)} />
-            </label>
-
-            <div className={styles.contactGrid}>
-              <label className={styles.label}>
-                Email
-                <input className={styles.input} value={contact.email} onChange={(e) => setContact((p) => ({ ...p, email: e.target.value }))} />
-              </label>
-              <label className={styles.label}>
-                Website
-                <input className={styles.input} value={contact.website} onChange={(e) => setContact((p) => ({ ...p, website: e.target.value }))} />
-              </label>
-              <label className={styles.label}>
-                Telegram
-                <input className={styles.input} value={contact.telegram} onChange={(e) => setContact((p) => ({ ...p, telegram: e.target.value }))} />
-              </label>
-              <label className={styles.label}>
-                Other
-                <input className={styles.input} value={contact.otherContact} onChange={(e) => setContact((p) => ({ ...p, otherContact: e.target.value }))} />
-              </label>
-            </div>
-
-            <button className={styles.button} type="submit" disabled={savingProfile}>
-              {savingProfile ? 'Сохранение...' : 'Сохранить профиль'}
-            </button>
-          </form>
-        )}
-
-        {passwordMode && (
-          <form className={styles.form} onSubmit={onChangePassword}>
-            <h2 className={styles.sectionTitle}>Смена пароля</h2>
-
-            <label className={styles.label}>
-              Текущий пароль
-              <input className={styles.input} type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-            </label>
-
-            <label className={styles.label}>
-              Новый пароль
-              <input className={styles.input} type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-            </label>
-
-            <label className={styles.label}>
-              Повтор нового пароля
-              <input className={styles.input} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-            </label>
-
-            <button className={styles.button} type="submit" disabled={savingPassword}>
-              {savingPassword ? 'Сохранение...' : 'Сменить пароль'}
-            </button>
-          </form>
-        )}
-
-        {message ? <StateMessage title="Успех" description={message} /> : null}
-        {error ? <StateMessage title="Ошибка" description={error} /> : null}
-
         {isArtist ? (
-          <section className={styles.form}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
-              <h2 className={styles.sectionTitle} style={{ margin: 0 }}>Мои работы</h2>
-              <button type="button" className={styles.button} onClick={() => navigate('/artworks/create')}>
-                Создать картину
-              </button>
+          <section className={styles.portfolio}>
+            <div className={styles.portfolioHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>Портфолио</h2>
+                <p className={styles.portfolioHint}>
+                  {loadingWorks ? 'Загрузка работ...' : `${artistWorks.length} работ`}
+                </p>
+              </div>
             </div>
 
-            {loadingArtworks ? <StateMessage title="Загрузка работ..." /> : null}
+            {artistWorks.length > 0 ? (
+              <div className={styles.portfolioGrid}>
+                {artistWorks.map((artwork) => (
+                  <article key={artwork.id} className={styles.workCard}>
+                    <Link to={`/artworks/${artwork.id}`} className={styles.workPreview}>
+                      <div className={styles.workImageWrap}>
+                        <img className={styles.workImage} src={toImageUrl(artwork.mainImageUrl)} alt={artwork.title} />
+                      </div>
 
-            {!loadingArtworks && myArtworks.length === 0 ? (
-              <StateMessage title="Пока нет работ" description="Создайте первую картину, чтобы она появилась здесь." />
-            ) : null}
+                      <div className={styles.workInfo}>
+                        <div className={styles.workTopRow}>
+                          <p className={styles.workCategory}>{artwork.category}</p>
+                          <p className={styles.workPrice}>${artwork.price.toFixed(2)}</p>
+                        </div>
+                        <h3 className={styles.workTitle}>{artwork.title}</h3>
+                        <p className={styles.workMeta}>
+                          {artwork.style} · {artwork.material}
+                        </p>
+                        <p className={styles.workMeta}>В наличии: {artwork.quantity > 0 ? 'Да' : 'Нет'}</p>
+                      </div>
+                    </Link>
 
-            <div style={{ display: 'grid', gap: 16 }}>
-              {myArtworks.map((artwork) => (
-                <div
-                  key={artwork.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '120px 1fr auto',
-                    gap: 16,
-                    alignItems: 'center',
-                    padding: 12,
-                    border: '1px solid rgba(128,128,128,0.18)',
-                    borderRadius: 16,
-                  }}
-                >
-                  <Link to={`/artworks/${artwork.id}`}>
-                    <img
-                      src={toImageUrl(artwork.mainImageUrl)}
-                      alt={artwork.title}
-                      style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 12 }}
-                    />
-                  </Link>
-
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{artwork.title}</div>
-                    <div style={{ opacity: 0.75 }}>{artwork.category}</div>
-                    <div>${artwork.price.toFixed(2)}</div>
-                    <div>Количество: {artwork.quantity}</div>
-                  </div>
-
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    <button type="button" className={styles.actionButton} onClick={() => navigate(`/artworks/${artwork.id}/edit`)}>
-                      Редактировать
-                    </button>
-                    <button type="button" className={styles.actionButton} onClick={() => setArtworkDeleteTarget(artwork)}>
-                      Удалить
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    <div className={styles.workActions}>
+                      <Link to={`/artworks/edit/${artwork.id}`} className={styles.workEditButton}>
+                        Редактировать
+                      </Link>
+                      <button
+                        type="button"
+                        className={styles.workDeleteButton}
+                        onClick={() => setDeleteArtworkTarget(artwork)}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.emptyPortfolio}>
+                <StateMessage
+                  title="Работ пока нет"
+                  description="Создайте первую картину, чтобы она появилась в портфолио."
+                />
+              </div>
+            )}
           </section>
         ) : null}
 
-        <div className={styles.adminOnly}>
-          <button type="button" className={styles.dangerButton} onClick={() => setDeleteOpen(true)}>
-            Удалить мой профиль
-          </button>
-        </div>
+        <ModalShell
+          open={editOpen}
+          title="Редактирование профиля"
+          subtitle="Обновите отображаемое имя, описание и контакты."
+          onClose={() => setEditOpen(false)}
+        >
+          <form className={styles.modalForm} onSubmit={submitProfile} noValidate>
+            <label className={styles.field}>
+              <span>Отображаемое имя</span>
+              <input
+                className={styles.input}
+                value={profileDraft.displayName}
+                onChange={(e) => onProfileFieldChange('displayName', e.target.value)}
+                onBlur={() => onProfileFieldBlur('displayName')}
+              />
+              {profileTouched.displayName && profileErrors.displayName ? (
+                <div className={styles.error}>{profileErrors.displayName}</div>
+              ) : null}
+            </label>
+
+            <label className={styles.field}>
+              <span>О себе</span>
+              <textarea
+                className={styles.textarea}
+                value={profileDraft.bio}
+                onChange={(e) => onProfileFieldChange('bio', e.target.value)}
+                onBlur={() => onProfileFieldBlur('bio')}
+              />
+              {profileTouched.bio && profileErrors.bio ? (
+                <div className={styles.error}>{profileErrors.bio}</div>
+              ) : null}
+            </label>
+
+            <div className={styles.groupTitle}>Контакты</div>
+
+            <label className={styles.field}>
+              <span>Email</span>
+              <input
+                className={styles.input}
+                value={profileDraft.email}
+                onChange={(e) => onProfileFieldChange('email', e.target.value)}
+                onBlur={() => onProfileFieldBlur('email')}
+              />
+              {profileTouched.email && profileErrors.email ? (
+                <div className={styles.error}>{profileErrors.email}</div>
+              ) : null}
+            </label>
+
+            <label className={styles.field}>
+              <span>Web-сайт</span>
+              <input
+                className={styles.input}
+                value={profileDraft.webSite}
+                onChange={(e) => onProfileFieldChange('webSite', e.target.value)}
+                onBlur={() => onProfileFieldBlur('webSite')}
+              />
+              {profileTouched.webSite && profileErrors.webSite ? (
+                <div className={styles.error}>{profileErrors.webSite}</div>
+              ) : null}
+            </label>
+
+            <label className={styles.field}>
+              <span>Другие контакты</span>
+              <input
+                className={styles.input}
+                value={profileDraft.otherContacts}
+                onChange={(e) => onProfileFieldChange('otherContacts', e.target.value)}
+                onBlur={() => onProfileFieldBlur('otherContacts')}
+              />
+              {profileTouched.otherContacts && profileErrors.otherContacts ? (
+                <div className={styles.error}>{profileErrors.otherContacts}</div>
+              ) : null}
+            </label>
+
+            <div className={styles.modalActions}>
+              <button type="submit" className={styles.primaryButton} disabled={savingProfile}>
+                {savingProfile ? 'Сохранение...' : 'Сохранить'}
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={() => setEditOpen(false)}>
+                Отмена
+              </button>
+            </div>
+          </form>
+        </ModalShell>
+
+        <ModalShell
+          open={passwordOpen}
+          title="Смена пароля"
+          subtitle="Введите текущий пароль и задайте новый."
+          onClose={() => setPasswordOpen(false)}
+        >
+          <form className={styles.modalForm} onSubmit={submitPassword} noValidate>
+            <label className={styles.field}>
+              <span>Текущий пароль</span>
+              <input
+                className={styles.input}
+                type="password"
+                value={passwordDraft.currentPassword}
+                onChange={(e) => onPasswordFieldChange('currentPassword', e.target.value)}
+                onBlur={() => onPasswordFieldBlur('currentPassword')}
+              />
+              {passwordTouched.currentPassword && passwordErrors.currentPassword ? (
+                <div className={styles.error}>{passwordErrors.currentPassword}</div>
+              ) : null}
+            </label>
+
+            <label className={styles.field}>
+              <span>Новый пароль</span>
+              <input
+                className={styles.input}
+                type="password"
+                value={passwordDraft.newPassword}
+                onChange={(e) => onPasswordFieldChange('newPassword', e.target.value)}
+                onBlur={() => onPasswordFieldBlur('newPassword')}
+              />
+              {passwordTouched.newPassword && passwordErrors.newPassword ? (
+                <div className={styles.error}>{passwordErrors.newPassword}</div>
+              ) : null}
+            </label>
+
+            <label className={styles.field}>
+              <span>Подтвердите новый пароль</span>
+              <input
+                className={styles.input}
+                type="password"
+                value={passwordDraft.confirmPassword}
+                onChange={(e) => onPasswordFieldChange('confirmPassword', e.target.value)}
+                onBlur={() => onPasswordFieldBlur('confirmPassword')}
+              />
+              {passwordTouched.confirmPassword && passwordErrors.confirmPassword ? (
+                <div className={styles.error}>{passwordErrors.confirmPassword}</div>
+              ) : null}
+            </label>
+
+            <div className={styles.modalActions}>
+              <button type="submit" className={styles.primaryButton} disabled={savingPassword}>
+                {savingPassword ? 'Сохранение...' : 'Сменить пароль'}
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={() => setPasswordOpen(false)}>
+                Отмена
+              </button>
+            </div>
+          </form>
+        </ModalShell>
 
         <ConfirmDialog
-          open={deleteOpen}
+          open={deleteProfileOpen}
           title="Удалить профиль?"
           message="Это действие удалит ваш профиль без возможности восстановления."
-          confirmText={deletingProfile ? 'Удаление...' : 'Удалить'}
-          loading={deletingProfile}
-          onCancel={() => setDeleteOpen(false)}
-          onConfirm={onDeleteProfile}
+          confirmText="Удалить"
+          onCancel={() => setDeleteProfileOpen(false)}
+          onConfirm={deleteProfile}
         />
 
         <ConfirmDialog
-          open={!!artworkDeleteTarget}
+          open={!!deleteArtworkTarget}
           title="Удалить картину?"
-          message={artworkDeleteTarget ? `Удалить работу "${artworkDeleteTarget.title}"?` : ''}
-          confirmText={deletingArtwork ? 'Удаление...' : 'Удалить'}
-          loading={deletingArtwork}
-          onCancel={() => setArtworkDeleteTarget(null)}
-          onConfirm={onDeleteArtwork}
+          message={deleteArtworkTarget ? `Картина «${deleteArtworkTarget.title}» будет удалена.` : ''}
+          confirmText="Удалить"
+          onCancel={() => setDeleteArtworkTarget(null)}
+          onConfirm={deleteArtworkConfirm}
         />
-
-        <p className={styles.metaLine}>Заполненные контакты: {filledContact.length}</p>
       </Container>
     </section>
   );

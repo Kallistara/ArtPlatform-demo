@@ -26,8 +26,18 @@ export function ConfirmDialog({
   return (
     <div className={styles.backdrop} onClick={onCancel}>
       <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className={styles.closeButton}
+          onClick={onCancel}
+          aria-label="Закрыть"
+        >
+          ×
+        </button>
+
         <h3 className={styles.title}>{title}</h3>
         <p className={styles.message}>{message}</p>
+
         <div className={styles.actions}>
           <button className={styles.secondary} onClick={onCancel} type="button">
             {cancelText}
