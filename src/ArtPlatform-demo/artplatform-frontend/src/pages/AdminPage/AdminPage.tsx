@@ -115,7 +115,7 @@ export function AdminPage() {
       const data = await getUsersByRole(role);
       setRoleRows(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки по роли');
+      setError(e instanceof Error ? e.message : 'Ошибка загрузки');
     } finally {
       setLoadingRoles(false);
     }
@@ -182,8 +182,8 @@ export function AdminPage() {
       <Container>
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Админка</h1>
-            <p className={styles.subtitle}>Управление пользователями, ролями и работами.</p>
+            <h1 className={styles.title}>Админ-панель</h1>
+            <p className={styles.subtitle}>Управление пользователями и работами.</p>
           </div>
         </div>
 
@@ -306,7 +306,7 @@ export function AdminPage() {
 
                 {loadingRoles ? <StateMessage title="Загрузка..." /> : null}
                 {!loadingRoles && roleRows.length === 0 ? (
-                  <StateMessage title="Нет данных" description="Нажмите роль, чтобы загрузить пользователей." />
+                  <StateMessage title="Нет данных" description="Выберите роль, чтобы просмотеть пользователей." />
                 ) : null}
               </div>
             </div>
@@ -337,7 +337,7 @@ export function AdminPage() {
 
                         <div className={styles.muted}>Artwork ID: {artwork.id}</div>
                         <div className={styles.muted}>Artist ID: {artwork.artistId}</div>
-                        <div className={styles.muted}>Автор: {artwork.artistName}</div>
+                        <div className={styles.muted}>Художник: {artwork.artistName}</div>
                         <div className={styles.muted}>Категория: {artwork.category}</div>
                         <div className={styles.muted}>Есть в наличии: {artwork.quantity > 0 ? 'Да' : 'Нет'}</div>
                       </div>

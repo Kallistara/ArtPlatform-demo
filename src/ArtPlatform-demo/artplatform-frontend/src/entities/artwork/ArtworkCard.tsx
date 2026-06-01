@@ -98,7 +98,7 @@ export function ArtworkCard({ artwork, showFavorite = true }: ArtworkCardProps) 
         <div className={styles.body}>
           <div className={styles.topRow}>
             <p className={styles.category}>{artwork.category}</p>
-            <p className={styles.price}>${artwork.price.toFixed(2)}</p>
+            <p className={styles.price}>{artwork.price.toFixed(2)} ₽</p>
           </div>
 
           <h3 className={styles.title}>{artwork.title}</h3>

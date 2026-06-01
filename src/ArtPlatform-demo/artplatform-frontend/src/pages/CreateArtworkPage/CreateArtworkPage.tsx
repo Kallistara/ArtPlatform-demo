@@ -19,7 +19,7 @@ const artworkSchema = z.object({
   description: z.string().trim().min(1, 'Описание обязательно').max(500, 'Максимум 500 символов'),
   category: z.enum(categories, { message: 'Выберите категорию' }),
   style: z.enum(stylesList, { message: 'Выберите стиль' }),
-  material: z.enum(materials, { message: 'Выберите материал' }),
+  material: z.enum(materials, { message: 'Выберите материалы' }),
   price: z.coerce.number().min(0, 'Цена не может быть отрицательной'),
   quantity: z.coerce.number().int().min(0, 'Количество не может быть отрицательным'),
   width: z.coerce.number().min(1, 'Ширина должна быть больше 0'),
@@ -49,7 +49,7 @@ export function CreateArtworkPage() {
     defaultValues: {
       title: '',
       description: '',
-      category: 'Абстракция',
+      category: 'Живопись',
       style: 'Реализм',
       material: 'Масло',
       price: 0,
@@ -106,10 +106,10 @@ export function CreateArtworkPage() {
 
       await createArtwork(formData);
 
-      success('Картина', 'Картина успешно создана');
+      success('Картина', 'Картина успешно опубликована');
       navigate('/account', { replace: true });
     } catch (err) {
-      toastError('Ошибка', err instanceof Error ? err.message : 'Не удалось создать картину');
+      toastError('Ошибка', err instanceof Error ? err.message : 'Не удалось опубликовать картину');
     }
   };
 
@@ -119,9 +119,9 @@ export function CreateArtworkPage() {
         <div className={styles.topBar}>
           <div>
             <p className={styles.label}>Новая работа</p>
-            <h1 className={styles.title}>Создание картины</h1>
+            <h1 className={styles.title}>Публикация картины</h1>
             <p className={styles.subtitle}>
-              Заполните поля и загрузите изображение. Несохранённые данные можно закрыть крестиком справа.
+              Заполните все поля и загрузите главное и дополнительные изображения. 
             </p>
           </div>
 
@@ -220,7 +220,7 @@ export function CreateArtworkPage() {
 
           <div className={styles.actions}>
             <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
-              {isSubmitting ? 'Сохранение...' : 'Создать картину'}
+              {isSubmitting ? 'Сохранение...' : 'Опубликовать картину'}
             </button>
             <button type="button" className={styles.secondaryButton} onClick={handleClose}>
               Отмена

@@ -25,9 +25,6 @@ export function AppRoutes() {
         <Route path="/artworks/:id" element={<ArtworkPage />} />
         <Route path="/artists/:userId" element={<ArtistPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
-
-        <Route path="/artists/:userId" element={<ArtistPage />} />
-        <Route path="/artworks/create" element={<CreateArtworkPage />} />
         <Route path="/artworks/edit/:id" element={<EditArtworkPage />} />
 
         <Route element={<ProtectedRoute />}>

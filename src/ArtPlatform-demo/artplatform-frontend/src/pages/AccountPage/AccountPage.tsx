@@ -79,13 +79,13 @@ function validateProfile(draft: ProfileDraft): ProfileErrors {
   const otherContacts = draft.otherContacts.trim();
 
   if (!displayName) {
-    errors.displayName = 'Укажите отображаемое имя.';
+    errors.displayName = 'Укажите имя.';
   } else if (displayName.length < 3) {
     errors.displayName = 'Минимум 3 символа.';
   } else if (displayName.length > 50) {
     errors.displayName = 'Максимум 50 символов.';
-  } else if (!/^[a-zA-Z0-9_а-яА-ЯёЁ\s-]+$/.test(displayName)) {
-    errors.displayName = 'Только буквы, цифры, пробел, _ и -.';
+  } else if (!/^[a-zA-Zа-яА-ЯёЁ0-9_ ]+$/.test(displayName)) {
+    errors.displayName = 'Только буквы, цифры и подчеркивание.';
   }
 
   if (bio.length > 500) {
@@ -98,7 +98,6 @@ function validateProfile(draft: ProfileDraft): ProfileErrors {
 
   if (webSite) {
     try {
-      // eslint-disable-next-line no-new
       new URL(webSite.startsWith('http') ? webSite : `https://${webSite}`);
     } catch {
       errors.webSite = 'Введите корректный URL.';
@@ -556,7 +555,7 @@ export function AccountPage() {
                       <div className={styles.workInfo}>
                         <div className={styles.workTopRow}>
                           <p className={styles.workCategory}>{artwork.category}</p>
-                          <p className={styles.workPrice}>${artwork.price.toFixed(2)}</p>
+                          <p className={styles.workPrice}>{artwork.price.toFixed(2)} ₽</p>
                         </div>
                         <h3 className={styles.workTitle}>{artwork.title}</h3>
                         <p className={styles.workMeta}>
@@ -595,12 +594,12 @@ export function AccountPage() {
         <ModalShell
           open={editOpen}
           title="Редактирование профиля"
-          subtitle="Обновите отображаемое имя, описание и контакты."
+          subtitle="Обновите имя, описание и контакты."
           onClose={() => setEditOpen(false)}
         >
           <form className={styles.modalForm} onSubmit={submitProfile} noValidate>
             <label className={styles.field}>
-              <span>Отображаемое имя</span>
+              <span>Имя</span>
               <input
                 className={styles.input}
                 value={profileDraft.displayName}
@@ -680,7 +679,7 @@ export function AccountPage() {
         <ModalShell
           open={passwordOpen}
           title="Смена пароля"
-          subtitle="Введите текущий пароль и задайте новый."
+          subtitle="Введите текущий пароль и новый."
           onClose={() => setPasswordOpen(false)}
         >
           <form className={styles.modalForm} onSubmit={submitPassword} noValidate>

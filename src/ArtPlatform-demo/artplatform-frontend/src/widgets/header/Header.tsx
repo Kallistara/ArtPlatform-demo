@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useScrollDirection } from '../../shared/hooks/UseScrollDirection';
 import { useAuth } from '../../app/providers/AuthProvider';
@@ -22,8 +22,10 @@ export function Header() {
   const direction = useScrollDirection();
   const hidden = direction === 'down';
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [query, setQuery] = useState('');
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `${styles.navLink} ${isActive ? styles.active : ''}`;
@@ -36,8 +38,34 @@ export function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = query.trim();
+    setSearchSubmitted(true);
     navigate(q ? `/catalog?query=${encodeURIComponent(q)}` : '/catalog');
   };
+
+  // Сброс запроса, если мы ушли со страницы каталога и не на странице картины
+  useEffect(() => {
+    const path = location.pathname;
+    const isCatalog = path === '/catalog';
+    const isArtwork = /^\/artworks\/[^/]+$/.test(path);
+
+    if (!isCatalog && !isArtwork) {
+      // Ушли со страницы каталога и не на странице картины
+      setQuery('');
+      setSearchSubmitted(false);
+    } else if (isCatalog) {
+      // Если мы на каталоге, но query в URL есть, можно подтянуть его в инпут
+      const params = new URLSearchParams(location.search);
+      const qFromUrl = params.get('query');
+      if (qFromUrl !== null) {
+        setQuery(qFromUrl);
+        setSearchSubmitted(true);
+      } else if (!searchSubmitted) {
+        // Если пришли на каталог без query и запрос ещё не был отправлен — очищаем
+        setQuery('');
+        setSearchSubmitted(false);
+      }
+    }
+  }, [location.pathname, location.search]);
 
   const displayName = user?.displayName || user?.username || user?.userId;
   const initials = getInitials(displayName, 'U');
@@ -73,14 +101,14 @@ export function Header() {
 
           {isAuthenticated ? (
             <>
-              {isAdmin ? <NavLink to="/admin" className={linkClass}>Админка</NavLink> : null}
+              {isAdmin ? <NavLink to="/admin" className={linkClass}>Админ-панель</NavLink> : null}
 
               {showCreateButton ? (
                 <Link
                   to="/artworks/create"
                   className={styles.createButton}
-                  title="Создать новую картину"
-                  aria-label="Создать новую картину"
+                  title="Опубликовать новую картину"
+                  aria-label="Опубликовать новую картину"
                 >
                   +
                 </Link>

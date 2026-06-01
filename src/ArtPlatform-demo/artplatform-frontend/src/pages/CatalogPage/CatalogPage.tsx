@@ -10,6 +10,158 @@ import styles from './CatalogPage.module.css';
 
 type SortMode = 'newest' | 'oldest' | 'price-asc' | 'price-desc' | 'title-asc';
 
+type SelectOption = {
+  value: string;
+  label: string;
+};
+
+function parseList(value: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((item) => decodeURIComponent(item).trim())
+    .filter(Boolean);
+}
+
+function encodeList(values: string[]): string {
+  return values.map((item) => encodeURIComponent(item)).join(',');
+}
+
+function getAvailabilityLabel(value: string) {
+  if (value === 'yes') return 'В наличии';
+  if (value === 'no') return 'Нет в наличии';
+  return 'Любая';
+}
+
+type SingleSelectDropdownProps = {
+  title: string;
+  options: readonly SelectOption[];
+  value: string;
+  valueLabel: string;
+  open: boolean;
+  onToggleOpen: () => void;
+  onSelect: (value: string) => void;
+};
+
+function SingleSelectDropdown({
+  title,
+  options,
+  value,
+  valueLabel,
+  open,
+  onToggleOpen,
+  onSelect,
+}: SingleSelectDropdownProps) {
+  return (
+    <div className={styles.filterDropdown}>
+      <button
+        type="button"
+        className={`${styles.filterTrigger} ${open ? styles.filterTriggerActive : ''}`}
+        onClick={onToggleOpen}
+        aria-expanded={open}
+      >
+        <span className={styles.filterTriggerTitle}>{title}</span>
+        <span className={styles.filterValue}>{valueLabel}</span>
+      </button>
+
+      {open ? (
+        <div className={styles.dropdownPanel}>
+          <div className={styles.dropdownList}>
+            {options.map((item) => {
+              const active = value === item.value;
+
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`${styles.dropdownChoiceButton} ${active ? styles.dropdownChoiceActive : ''}`}
+                  onClick={() => onSelect(item.value)}
+                >
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type MultiSelectDropdownProps = {
+  title: string;
+  options: readonly SelectOption[];
+  committedValue: string[];
+  draftValue: string[];
+  open: boolean;
+  onToggleOpen: () => void;
+  onToggleDraftValue: (value: string) => void;
+  onClearDraft: () => void;
+  onCommit: () => void;
+};
+
+function MultiSelectDropdown({
+  title,
+  options,
+  committedValue,
+  draftValue,
+  open,
+  onToggleOpen,
+  onToggleDraftValue,
+  onClearDraft,
+  onCommit,
+}: MultiSelectDropdownProps) {
+  const counterLabel = committedValue.length > 0 ? `${committedValue.length}` : 'Все';
+
+  return (
+    <div className={styles.filterDropdown}>
+      <button
+        type="button"
+        className={`${styles.filterTrigger} ${open ? styles.filterTriggerActive : ''}`}
+        onClick={onToggleOpen}
+        aria-expanded={open}
+      >
+        <span className={styles.filterTriggerTitle}>{title}</span>
+        <span className={styles.filterValue}>{counterLabel}</span>
+      </button>
+
+      {open ? (
+        <div className={styles.dropdownPanel}>
+          <div className={styles.dropdownList}>
+            {options.map((item) => {
+              const checked = draftValue.includes(item.value);
+
+              return (
+                <label
+                  key={item.value}
+                  className={`${styles.dropdownChoiceRow} ${checked ? styles.dropdownChoiceActive : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.dropdownCheckbox}
+                    checked={checked}
+                    onChange={() => onToggleDraftValue(item.value)}
+                  />
+                  <span>{item.label}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className={styles.dropdownActions}>
+            <button type="button" className={styles.dropdownActionButton} onClick={onClearDraft}>
+              Сбросить
+            </button>
+            <button type="button" className={styles.dropdownActionPrimary} onClick={onCommit}>
+              Готово
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -19,8 +171,8 @@ export function CatalogPage() {
 
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
   const [category, setCategory] = useState(searchParams.get('category') ?? '');
-  const [style, setStyle] = useState(searchParams.get('style') ?? '');
-  const [material, setMaterial] = useState(searchParams.get('material') ?? '');
+  const [stylesSelected, setStylesSelected] = useState<string[]>(parseList(searchParams.get('style')));
+  const [materialsSelected, setMaterialsSelected] = useState<string[]>(parseList(searchParams.get('material')));
   const [available, setAvailable] = useState(searchParams.get('available') ?? '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') ?? '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') ?? '');
@@ -31,9 +183,46 @@ export function CatalogPage() {
   const [sort, setSort] = useState<SortMode>((searchParams.get('sort') as SortMode) ?? 'newest');
   const [filtersOpen, setFiltersOpen] = useState(true);
 
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [availabilityMenuOpen, setAvailabilityMenuOpen] = useState(false);
+  const [styleMenuOpen, setStyleMenuOpen] = useState(false);
+  const [materialMenuOpen, setMaterialMenuOpen] = useState(false);
+
+  const [stylesDraft, setStylesDraft] = useState<string[]>(stylesSelected);
+  const [materialsDraft, setMaterialsDraft] = useState<string[]>(materialsSelected);
+
+  const categoryOptions: SelectOption[] = [
+    { value: '', label: 'Все категории' },
+    ...ARTWORK_CATEGORIES.map((item) => ({ value: item, label: item })),
+  ];
+
+  const availabilityOptions: SelectOption[] = [
+    { value: '', label: 'Любая' },
+    { value: 'yes', label: 'В наличии' },
+    { value: 'no', label: 'Нет в наличии' },
+  ];
+
+  const styleOptions: SelectOption[] = ARTWORK_STYLES.map((item) => ({ value: item, label: item }));
+  const materialOptions: SelectOption[] = ARTWORK_MATERIALS.map((item) => ({ value: item, label: item }));
+
   useEffect(() => {
-    const initialQuery = searchParams.get('query') ?? '';
-    setQuery(initialQuery);
+    setQuery(searchParams.get('q') ?? '');
+    setCategory(searchParams.get('category') ?? '');
+    setStylesSelected(parseList(searchParams.get('style')));
+    setMaterialsSelected(parseList(searchParams.get('material')));
+    setAvailable(searchParams.get('available') ?? '');
+    setMinPrice(searchParams.get('minPrice') ?? '');
+    setMaxPrice(searchParams.get('maxPrice') ?? '');
+    setMinWidth(searchParams.get('minWidth') ?? '');
+    setMaxWidth(searchParams.get('maxWidth') ?? '');
+    setMinHeight(searchParams.get('minHeight') ?? '');
+    setMaxHeight(searchParams.get('maxHeight') ?? '');
+    setSort((searchParams.get('sort') as SortMode) ?? 'newest');
+
+    setCategoryMenuOpen(false);
+    setAvailabilityMenuOpen(false);
+    setStyleMenuOpen(false);
+    setMaterialMenuOpen(false);
   }, [searchParams]);
 
   useEffect(() => {
@@ -60,27 +249,12 @@ export function CatalogPage() {
   }, []);
 
   useEffect(() => {
-    setQuery(searchParams.get('q') ?? '');
-    setCategory(searchParams.get('category') ?? '');
-    setStyle(searchParams.get('style') ?? '');
-    setMaterial(searchParams.get('material') ?? '');
-    setAvailable(searchParams.get('available') ?? '');
-    setMinPrice(searchParams.get('minPrice') ?? '');
-    setMaxPrice(searchParams.get('maxPrice') ?? '');
-    setMinWidth(searchParams.get('minWidth') ?? '');
-    setMaxWidth(searchParams.get('maxWidth') ?? '');
-    setMinHeight(searchParams.get('minHeight') ?? '');
-    setMaxHeight(searchParams.get('maxHeight') ?? '');
-    setSort((searchParams.get('sort') as SortMode) ?? 'newest');
-  }, [searchParams]);
-
-  useEffect(() => {
     const next = new URLSearchParams();
 
     if (query.trim()) next.set('q', query.trim());
     if (category) next.set('category', category);
-    if (style) next.set('style', style);
-    if (material) next.set('material', material);
+    if (stylesSelected.length > 0) next.set('style', encodeList(stylesSelected));
+    if (materialsSelected.length > 0) next.set('material', encodeList(materialsSelected));
     if (available) next.set('available', available);
     if (minPrice) next.set('minPrice', minPrice);
     if (maxPrice) next.set('maxPrice', maxPrice);
@@ -90,12 +264,14 @@ export function CatalogPage() {
     if (maxHeight) next.set('maxHeight', maxHeight);
     if (sort) next.set('sort', sort);
 
-    setSearchParams(next, { replace: true });
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
   }, [
     query,
     category,
-    style,
-    material,
+    stylesSelected,
+    materialsSelected,
     available,
     minPrice,
     maxPrice,
@@ -104,13 +280,18 @@ export function CatalogPage() {
     minHeight,
     maxHeight,
     sort,
+    searchParams,
     setSearchParams,
   ]);
 
+  const toggleDraftValue = (value: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  };
+
   const resetFilters = () => {
     setCategory('');
-    setStyle('');
-    setMaterial('');
+    setStylesSelected([]);
+    setMaterialsSelected([]);
     setAvailable('');
     setMinPrice('');
     setMaxPrice('');
@@ -118,6 +299,12 @@ export function CatalogPage() {
     setMaxWidth('');
     setMinHeight('');
     setMaxHeight('');
+    setStylesDraft([]);
+    setMaterialsDraft([]);
+    setCategoryMenuOpen(false);
+    setAvailabilityMenuOpen(false);
+    setStyleMenuOpen(false);
+    setMaterialMenuOpen(false);
   };
 
   const handleSearchSubmit = () => {
@@ -133,8 +320,8 @@ export function CatalogPage() {
 
       const matchesQuery = !q || searchable.includes(q);
       const matchesCategory = !category || artwork.category === category;
-      const matchesStyle = !style || artwork.style === style;
-      const matchesMaterial = !material || artwork.material === material;
+      const matchesStyle = stylesSelected.length === 0 || stylesSelected.includes(artwork.style);
+      const matchesMaterial = materialsSelected.length === 0 || materialsSelected.includes(artwork.material);
       const matchesAvailable =
         !available
           ? true
@@ -197,8 +384,8 @@ export function CatalogPage() {
     artworks,
     query,
     category,
-    style,
-    material,
+    stylesSelected,
+    materialsSelected,
     available,
     minPrice,
     maxPrice,
@@ -215,7 +402,9 @@ export function CatalogPage() {
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>Каталог</h1>
-            <p className={styles.subtitle}>Поиск, сортировка и фильтры по картинам, авторам и категориям.</p>
+            <p className={styles.subtitle}>
+              Поиск, фильтрация и сортировка по стилям, материалам, авторам и категориям.
+            </p>
           </div>
 
           <div className={styles.counter}>
@@ -227,7 +416,7 @@ export function CatalogPage() {
           <SearchBar
             value={query}
             onChange={setQuery}
-            placeholder="Поиск по картинам, авторам, категориям..."
+            placeholder="Поиск по картинам, художникам, категориям..."
             onSubmit={handleSearchSubmit}
           />
         </div>
@@ -250,7 +439,7 @@ export function CatalogPage() {
             <option value="oldest">Сначала старые</option>
             <option value="price-asc">Цена: по возрастанию</option>
             <option value="price-desc">Цена: по убыванию</option>
-            <option value="title-asc">По названию</option>
+            <option value="title-asc">В алфавитном порядке</option>
           </select>
         </div>
 
@@ -264,10 +453,7 @@ export function CatalogPage() {
                 <button
                   type="button"
                   className={styles.clearButton}
-                  onClick={() => {
-                    resetFilters();
-                    setSort('newest');
-                  }}
+                  onClick={resetFilters}
                 >
                   Сбросить
                 </button>
@@ -277,63 +463,112 @@ export function CatalogPage() {
                 <div className={styles.filterGroup}>
                   <div className={styles.groupTitle}>Основное</div>
 
-                  <label className={styles.field}>
-                    <span>Категория</span>
-                    <select className={styles.select} value={category} onChange={(e) => setCategory(e.target.value)}>
-                      <option value="">Все</option>
-                      {ARTWORK_CATEGORIES.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <SingleSelectDropdown
+                    title="Категория"
+                    options={categoryOptions}
+                    value={category}
+                    valueLabel={category || 'Все категории'}
+                    open={categoryMenuOpen}
+                    onToggleOpen={() => {
+                      setStyleMenuOpen(false);
+                      setMaterialMenuOpen(false);
+                      setAvailabilityMenuOpen(false);
+                      setCategoryMenuOpen((prev) => !prev);
+                    }}
+                    onSelect={(value) => {
+                      setCategory(value);
+                      setCategoryMenuOpen(false);
+                    }}
+                  />
 
-                  <label className={styles.field}>
-                    <span>Стиль</span>
-                    <select className={styles.select} value={style} onChange={(e) => setStyle(e.target.value)}>
-                      <option value="">Все</option>
-                      {ARTWORK_STYLES.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <MultiSelectDropdown
+                    title="Стиль"
+                    options={styleOptions}
+                    committedValue={stylesSelected}
+                    draftValue={stylesDraft}
+                    open={styleMenuOpen}
+                    onToggleOpen={() => {
+                      setCategoryMenuOpen(false);
+                      setAvailabilityMenuOpen(false);
+                      setMaterialMenuOpen(false);
 
-                  <label className={styles.field}>
-                    <span>Материал</span>
-                    <select className={styles.select} value={material} onChange={(e) => setMaterial(e.target.value)}>
-                      <option value="">Все</option>
-                      {ARTWORK_MATERIALS.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      setStyleMenuOpen((prev) => {
+                        if (!prev) setStylesDraft(stylesSelected);
+                        return !prev;
+                      });
+                    }}
+                    onToggleDraftValue={(value) => toggleDraftValue(value, setStylesDraft)}
+                    onClearDraft={() => setStylesDraft([])}
+                    onCommit={() => {
+                      setStylesSelected(stylesDraft);
+                      setStyleMenuOpen(false);
+                    }}
+                  />
 
-                  <label className={styles.field}>
-                    <span>Доступность</span>
-                    <select className={styles.select} value={available} onChange={(e) => setAvailable(e.target.value)}>
-                      <option value="">Любая</option>
-                      <option value="yes">В наличии</option>
-                      <option value="no">Нет в наличии</option>
-                    </select>
-                  </label>
+                  <MultiSelectDropdown
+                    title="Материал"
+                    options={materialOptions}
+                    committedValue={materialsSelected}
+                    draftValue={materialsDraft}
+                    open={materialMenuOpen}
+                    onToggleOpen={() => {
+                      setCategoryMenuOpen(false);
+                      setAvailabilityMenuOpen(false);
+                      setStyleMenuOpen(false);
+
+                      setMaterialMenuOpen((prev) => {
+                        if (!prev) setMaterialsDraft(materialsSelected);
+                        return !prev;
+                      });
+                    }}
+                    onToggleDraftValue={(value) => toggleDraftValue(value, setMaterialsDraft)}
+                    onClearDraft={() => setMaterialsDraft([])}
+                    onCommit={() => {
+                      setMaterialsSelected(materialsDraft);
+                      setMaterialMenuOpen(false);
+                    }}
+                  />
+
+                  <SingleSelectDropdown
+                    title="Доступность"
+                    options={availabilityOptions}
+                    value={available}
+                    valueLabel={getAvailabilityLabel(available)}
+                    open={availabilityMenuOpen}
+                    onToggleOpen={() => {
+                      setCategoryMenuOpen(false);
+                      setStyleMenuOpen(false);
+                      setMaterialMenuOpen(false);
+                      setAvailabilityMenuOpen((prev) => !prev);
+                    }}
+                    onSelect={(value) => {
+                      setAvailable(value);
+                      setAvailabilityMenuOpen(false);
+                    }}
+                  />
                 </div>
 
                 <div className={styles.filterGroup}>
                   <div className={styles.groupTitle}>Цена</div>
 
                   <label className={styles.field}>
-                    <span>Цена от</span>
-                    <input className={styles.input} type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+                    <span>Цена от (₽)</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                    />
                   </label>
 
                   <label className={styles.field}>
-                    <span>Цена до</span>
-                    <input className={styles.input} type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+                    <span>Цена до (₽)</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                    />
                   </label>
                 </div>
 
@@ -341,23 +576,43 @@ export function CatalogPage() {
                   <div className={styles.groupTitle}>Размеры</div>
 
                   <label className={styles.field}>
-                    <span>Ширина от</span>
-                    <input className={styles.input} type="number" value={minWidth} onChange={(e) => setMinWidth(e.target.value)} />
+                    <span>Ширина от (см)</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={minWidth}
+                      onChange={(e) => setMinWidth(e.target.value)}
+                    />
                   </label>
 
                   <label className={styles.field}>
-                    <span>Ширина до</span>
-                    <input className={styles.input} type="number" value={maxWidth} onChange={(e) => setMaxWidth(e.target.value)} />
+                    <span>Ширина до (см)</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={maxWidth}
+                      onChange={(e) => setMaxWidth(e.target.value)}
+                    />
                   </label>
 
                   <label className={styles.field}>
-                    <span>Высота от</span>
-                    <input className={styles.input} type="number" value={minHeight} onChange={(e) => setMinHeight(e.target.value)} />
+                    <span>Высота от (см)</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={minHeight}
+                      onChange={(e) => setMinHeight(e.target.value)}
+                    />
                   </label>
 
                   <label className={styles.field}>
-                    <span>Высота до</span>
-                    <input className={styles.input} type="number" value={maxHeight} onChange={(e) => setMaxHeight(e.target.value)} />
+                    <span>Высота до (см)</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={maxHeight}
+                      onChange={(e) => setMaxHeight(e.target.value)}
+                    />
                   </label>
                 </div>
               </div>
@@ -369,7 +624,10 @@ export function CatalogPage() {
             {error ? <StateMessage title="Ошибка" description={error} /> : null}
 
             {!loading && !error && filteredArtworks.length === 0 ? (
-              <StateMessage title="Ничего не найдено" description="Попробуйте изменить поисковый запрос или фильтры." />
+              <StateMessage
+                title="Ничего не найдено"
+                description="Попробуйте изменить запрос или убрать фильтры."
+              />
             ) : null}
 
             {!loading && !error && filteredArtworks.length > 0 ? (

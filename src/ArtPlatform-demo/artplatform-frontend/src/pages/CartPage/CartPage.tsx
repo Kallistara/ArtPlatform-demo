@@ -173,7 +173,7 @@ export function CartPage() {
       setClearing(true);
       const res = await clearCart();
       setItems([]);
-      success('Корзина', `Корзина очищена: удалено ${res.result} позиций`);
+      success('Корзина', `Корзина очищена. Удалено позиций: ${res.result}`);
     } catch (e) {
       toastError('Ошибка', e instanceof Error ? e.message : 'Не удалось очистить корзину');
     } finally {
@@ -217,8 +217,8 @@ export function CartPage() {
 
         {!loading && !error && items.length === 0 ? (
           <StateMessage
-            title="Корзина пуста"
-            description="Добавьте картины из каталога, чтобы собрать заказ."
+            title="Корзина пустая."
+            description="Добавьте картины из каталога, чтобы оформить заказ."
           />
         ) : null}
 
@@ -248,8 +248,8 @@ export function CartPage() {
                           </div>
 
                           <div className={styles.priceBlock}>
-                            <div className={styles.price}>${(item.price * item.quantity).toFixed(2)}</div>
-                            <div className={styles.unitPrice}>${item.price.toFixed(2)} за шт.</div>
+                            <div className={styles.price}>{(item.price * item.quantity).toFixed(2)} ₽</div>
+                            <div className={styles.unitPrice}>{item.price.toFixed(2)} ₽ за шт.</div>
                             <div className={styles.stock}>
                               Доступно: {item.availableQuantity}
                             </div>
@@ -278,7 +278,7 @@ export function CartPage() {
                           onClick={() => onIncrease(item)}
                           disabled={!canIncrease || busyKey === `inc:${item.artworkId}`}
                           aria-label="Увеличить количество"
-                          title={canIncrease ? 'Увеличить количество' : 'Достигнут лимит доступных экземпляров'}
+                          title={canIncrease ? 'Увеличить количество' : 'Экземпляров картины в наличии больше нет'}
                         >
                           +
                         </button>
@@ -313,7 +313,7 @@ export function CartPage() {
 
               <div className={styles.summaryRowTotal}>
                 <span>Сумма</span>
-                <strong>${totals.sum.toFixed(2)}</strong>
+                <strong>{totals.sum.toFixed(2)} ₽</strong>
               </div>
 
               <Link to="/checkout" className={styles.backLink}>

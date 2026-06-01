@@ -1,0 +1,18 @@
+.page {
+  position: relative;
+  overflow: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 14%, rgba(90, 167, 255, 0.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 18% 18%, rgba(245, 200, 76, 0.12) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 12%, rgba(90, 167, 255, 0.14) 0 2px, transparent 3px),
+    radial-gradient(circle at 86% 16%, rgba(245, 200, 76, 0.10) 0 2px, transparent 3px);
+  opacity: 0.5;
+  z-index: 0;
+}

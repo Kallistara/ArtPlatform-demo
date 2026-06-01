@@ -11,7 +11,7 @@ namespace ArtService.Models.DTO
         [Required]
         [MinLength(3, ErrorMessage = "Минимум 3 символа")]
         [MaxLength(50, ErrorMessage = "Максимум 50 символов")]
-        [RegularExpression(@"^[a-zA-Z0-9_]+$", ErrorMessage = "Только буквы, цифры и подчеркивание")]
+        [RegularExpression(@"^[\p{L}0-9_ ]+$", ErrorMessage = "Только буквы, цифры и подчеркивание")]
         public string Title { get; set; } = string.Empty;
 
         // Описание

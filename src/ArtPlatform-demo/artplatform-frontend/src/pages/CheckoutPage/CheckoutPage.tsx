@@ -173,7 +173,7 @@ export function CheckoutPage() {
           <div>
             <h1 className={styles.title}>Оформление заказа</h1>
             <p className={styles.subtitle}>
-              Заполните контактные данные и выберите способ доставки. Это демонстрационная форма.
+              Заполните контактные данные и выберите способ доставки. 
             </p>
           </div>
         </div>

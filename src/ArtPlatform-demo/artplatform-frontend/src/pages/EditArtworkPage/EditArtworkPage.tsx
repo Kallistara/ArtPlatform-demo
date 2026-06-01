@@ -14,7 +14,7 @@ const editArtworkSchema = z.object({
   description: z.string().trim().min(1, 'Описание обязательно').max(500, 'Максимум 500 символов'),
   category: z.enum(ARTWORK_CATEGORIES, { message: 'Выберите категорию' }),
   style: z.enum(ARTWORK_STYLES, { message: 'Выберите стиль' }),
-  material: z.enum(ARTWORK_MATERIALS, { message: 'Выберите материал' }),
+  material: z.enum(ARTWORK_MATERIALS, { message: 'Выберите материалы' }),
   price: z.coerce.number().min(0, 'Цена не может быть отрицательной'),
   quantity: z.coerce.number().int().min(0, 'Количество не может быть отрицательным'),
   width: z.coerce.number().min(1, 'Ширина должна быть больше 0'),
@@ -145,7 +145,7 @@ export function EditArtworkPage() {
             <p className={styles.label}>Редактирование</p>
             <h1 className={styles.title}>Изменение картины</h1>
             <p className={styles.subtitle}>
-              Можно поменять описание, параметры и изображения. Для выхода есть крестик справа.
+              Можно поменять описание, параметры и главное и дополнительные изображения.
             </p>
           </div>
 
@@ -225,7 +225,7 @@ export function EditArtworkPage() {
 
           <div className={styles.uploadGrid}>
             <label className={styles.field}>
-              <span>Новое главное изображение</span>
+              <span>Главное изображение</span>
               <input className={styles.fileInput} type="file" accept="image/*" {...register('mainImage')} />
               {errors.mainImage ? <div className={styles.error}>{String(errors.mainImage.message ?? '')}</div> : null}
             </label>

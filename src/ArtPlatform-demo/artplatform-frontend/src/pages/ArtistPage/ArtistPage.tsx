@@ -7,6 +7,7 @@ import { getArtworksByArtistId, type Artwork } from '../../shared/api/artworks.a
 import { ArtworkCard } from '../../entities/artwork/ArtworkCard';
 import styles from './ArtistPage.module.css';
 
+
 function formatDate(value?: string) {
   if (!value) return '—';
   const date = new Date(value);
@@ -56,7 +57,7 @@ export function ArtistPage() {
         setProfile(profileData);
         setArtworks(artworksData);
       } catch (e) {
-        if (!ignore) setError(e instanceof Error ? e.message : 'Ошибка загрузки страницы автора');
+        if (!ignore) setError(e instanceof Error ? e.message : 'Ошибка загрузки страницы художника');
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -84,7 +85,7 @@ export function ArtistPage() {
     return (
       <section className={styles.page}>
         <Container>
-          <StateMessage title="Загрузка автора..." />
+          <StateMessage title="Загрузка художника..." />
         </Container>
       </section>
     );
@@ -104,7 +105,7 @@ export function ArtistPage() {
     return (
       <section className={styles.page}>
         <Container>
-          <StateMessage title="Автор не найден" />
+          <StateMessage title="Художник не найден" />
         </Container>
       </section>
     );
@@ -123,11 +124,17 @@ export function ArtistPage() {
                 <h1 className={styles.title}>{profile.displayName || profile.userName}</h1>
               </div>
 
-              {roleLabel ? <span className={styles.roleBadge}>{roleLabel}</span> : null}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {roleLabel ? <span className={styles.roleBadge}>{roleLabel}</span> : null}
+
+                <button type="button" className={styles.primaryButton}>
+                  Написать
+                </button>
+              </div>
             </div>
 
             <p className={styles.bio}>
-              {profile.bio?.trim() ? profile.bio : 'Пока автор ничего о себе не рассказал.'}
+              {profile.bio?.trim() ? profile.bio : 'Художник ничего о себе не рассказал.'}
             </p>
 
             <div className={styles.meta}>
@@ -145,7 +152,7 @@ export function ArtistPage() {
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Работы автора</h2>
+            <h2 className={styles.sectionTitle}>Работы художника</h2>
             <span className={styles.sectionHint}>Все картины этого профиля</span>
           </div>
 
@@ -158,7 +165,7 @@ export function ArtistPage() {
           ) : (
             <StateMessage
               title="Работ пока нет"
-              description="У этого автора ещё не опубликовано ни одной картины."
+              description="У этого художника нет опубликованных картин."
             />
           )}
         </section>

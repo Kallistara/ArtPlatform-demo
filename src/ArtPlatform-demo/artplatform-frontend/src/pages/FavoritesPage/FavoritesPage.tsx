@@ -81,14 +81,14 @@ export function FavoritesPage() {
       <Container>
         <div className={styles.header}>
           <h1 className={styles.title}>Избранное</h1>
-          <p className={styles.subtitle}>Картины, которые вы отметили сердечком.</p>
+          <p className={styles.subtitle}>Картины, которые Вам понравились.</p>
         </div>
 
         {loading ? <StateMessage title="Загрузка избранного..." /> : null}
         {error ? <StateMessage title="Ошибка" description={error} /> : null}
 
         {!loading && !error && items.length === 0 ? (
-          <StateMessage title="Избранное пока пустое" description="Добавьте картины сердечком в каталоге." />
+          <StateMessage title="В избранном пока ничего нет." description="Нажмите на сердечко, чтобы добавить картину в избранное." />
         ) : null}
 
         {!loading && !error && items.length > 0 ? (
@@ -103,7 +103,7 @@ export function FavoritesPage() {
                   <div className={styles.body}>
                     <div className={styles.topRow}>
                       <p className={styles.category}>{item.category}</p>
-                      <p className={styles.price}>${item.price.toFixed(2)}</p>
+                      <p className={styles.price}>{item.price.toFixed(2)} ₽</p>
                     </div>
 
                     <h3 className={styles.titleCard}>{item.artworkTitle}</h3>

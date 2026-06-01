@@ -350,14 +350,14 @@ export function ArtworkPage() {
 
           <div className={styles.info}>
             <h1 className={styles.title}>{artwork.title}</h1>
-            <p className={styles.price}>${artwork.price.toFixed(2)}</p>
+            <p className={styles.price}>{artwork.price.toFixed(2)} ₽</p>
             <p className={styles.description}>{artwork.description}</p>
 
             <div className={styles.meta}>
               <div>Категория: {artwork.category}</div>
               <div>Стиль: {artwork.style}</div>
               <div>Материал: {artwork.material}</div>
-              <div>Размер: {artwork.width} × {artwork.height}</div>
+              <div>Размер (см): {artwork.width} × {artwork.height}</div>
               <div>Есть в наличии: {artwork.quantity > 0 ? 'Да' : 'Нет'}</div>
             </div>
 
@@ -377,11 +377,16 @@ export function ArtworkPage() {
             <Link to={`/artists/${artwork.artistId}`} state={{ from: `${location.pathname}${location.search}` }} className={styles.artistCard}>
               <div className={styles.artistAvatar}>{artistInitials}</div>
               <div className={styles.artistText}>
-                <div className={styles.artistLabel}>Автор</div>
+                <div className={styles.artistLabel}>Художник</div>
                 <div className={styles.artistName}>{artistName}</div>
                 <div className={styles.artistHandle}>@{artistHandle}</div>
                 {artistProfile?.bio ? <p className={styles.artistBio}>{artistProfile.bio}</p> : null}
                 <div className={styles.artistMeta}>На сайте с {formatDate(artistProfile?.createdAt)}</div>
+              </div>
+              <div className={styles.actionRow}>
+                <button type="button" className={styles.primaryButton}>
+                  Написать
+                </button>
               </div>
             </Link>
 
@@ -391,7 +396,7 @@ export function ArtworkPage() {
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Другие работы автора</h2>
+            <h2 className={styles.sectionTitle}>Другие работы художника</h2>
             <span className={styles.sectionHint}>{loadingArtist ? 'Загрузка...' : `${artistWorks.length} работ`}</span>
           </div>
 
@@ -404,7 +409,7 @@ export function ArtworkPage() {
           ) : (
             <StateMessage
               title="Других работ пока нет"
-              description="У автора пока нет опубликованных картин помимо этой."
+              description="У художника пока нет опубликованных картин кроме этой."
             />
           )}
         </section>

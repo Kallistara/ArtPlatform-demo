@@ -1,5 +1,9 @@
 .page {
-  padding: 28px 0 72px;
+  position: relative;
+  min-height: 100vh;
+  padding-top: calc(var(--app-header-height, 84px) + 40px);
+  padding-bottom: 72px;
+  background: transparent;
 }
 
 .profileCard {
@@ -8,9 +12,9 @@
   gap: 20px;
   padding: 24px;
   border-radius: 24px;
-  border: 1px solid rgba(128, 128, 128, 0.14);
-  background: white;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-medium);
   align-items: center;
 }
 
@@ -22,10 +26,9 @@
   place-items: center;
   font-size: 36px;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #111827;
-  background: linear-gradient(135deg, rgba(17, 24, 39, 0.08), rgba(17, 24, 39, 0.03));
-  border: 1px solid rgba(128, 128, 128, 0.12);
+  color: var(--color-text);
+  background: linear-gradient(135deg, var(--color-primary-light), rgba(245, 200, 76, 0.25));
+  border: 1px solid var(--color-border);
 }
 
 .profileBody {
@@ -41,7 +44,7 @@
 
 .handle {
   font-size: 14px;
-  opacity: 0.62;
+  color: var(--color-text-secondary);
   margin-bottom: 6px;
 }
 
@@ -49,393 +52,25 @@
   margin: 0;
   font-size: clamp(28px, 3vw, 40px);
   line-height: 1.05;
+  color: var(--color-text);
+  font-weight: 900;
 }
 
 .metaLine {
   margin-top: 10px;
   font-size: 14px;
-  opacity: 0.72;
+  color: var(--color-text-secondary);
 }
 
 .roleBadge {
   border-radius: 999px;
   padding: 8px 12px;
-  background: rgba(17, 24, 39, 0.06);
+  background: rgba(59, 130, 246, 0.08);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
-  opacity: 0.8;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-
-.primaryButton,
-.secondaryButton,
-.ghostButton {
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: 14px;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.primaryButton {
-  border: 0;
-  background: #111827;
-  color: white;
-}
-
-.primaryButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.secondaryButton {
-  border: 1px solid rgba(128, 128, 128, 0.22);
-  background: transparent;
-  color: inherit;
-}
-
-.ghostButton {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  opacity: 0.72;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 18px;
-}
-
-.card {
-  padding: 20px;
-  border-radius: 24px;
-  border: 1px solid rgba(128, 128, 128, 0.14);
-  background: white;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
-}
-
-.sectionTitle {
-  margin: 0 0 14px;
-  font-size: 18px;
-}
-
-.bio {
-  margin: 0;
-  line-height: 1.6;
-  opacity: 0.88;
-  white-space: pre-wrap;
-}
-
-.contacts {
-  display: grid;
-  gap: 12px;
-}
-
-.contactRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: start;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.12);
-}
-
-.contactRow:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.contactRow span {
-  opacity: 0.62;
-}
-
-.contactRow strong {
-  text-align: right;
-  font-weight: 700;
-  word-break: break-word;
-}
-
-.emptyText {
-  margin: 0;
-  opacity: 0.7;
-}
-
-.modalBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(4px);
-  display: grid;
-  place-items: center;
-  padding: 16px;
-}
-
-.modal {
-  width: min(760px, 100%);
-  max-height: 92vh;
-  overflow: auto;
-  background: white;
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-}
-
-.modalForm {
-  display: grid;
-  gap: 12px;
-}
-
-.modalHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: start;
-  margin-bottom: 18px;
-}
-
-.modalTitle {
-  margin: 0;
-  font-size: 22px;
-}
-
-.modalSubtitle {
-  margin: 8px 0 0;
-  opacity: 0.72;
-}
-
-.modalClose {
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(17, 24, 39, 0.06);
-  cursor: pointer;
-  font-size: 22px;
-  line-height: 38px;
-}
-
-.modalForm {
-  display: grid;
-  gap: 14px;
-}
-
-.groupTitle {
-  margin-top: 4px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.62;
-}
-
-.field {
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.input,
-.textarea {
-  width: 100%;
-  min-height: 46px;
-  padding: 0 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(128, 128, 128, 0.22);
-  background: white;
-  font: inherit;
-  outline: none;
-}
-
-.textarea {
-  min-height: 120px;
-  padding-top: 12px;
-  resize: vertical;
-}
-
-.input:focus,
-.textarea:focus {
-  border-color: rgba(17, 24, 39, 0.42);
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
-}
-
-.error {
-  font-size: 12px;
-  line-height: 1.35;
-  color: #b91c1c;
-}
-
-.modalActions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  padding-top: 6px;
-}
-
-@media (max-width: 860px) {
-  .profileCard {
-    grid-template-columns: 1fr;
-    justify-items: start;
-  }
-
-  .avatar {
-    width: 92px;
-    height: 92px;
-    font-size: 28px;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
-  }
-
-  .profileTop {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 560px) {
-  .card,
-  .profileCard {
-    padding: 18px;
-  }
-
-  .modal {
-    padding: 18px;
-  }
-
-  .modalActions,
-  .actions {
-    flex-direction: column;
-  }
-
-  .primaryButton,
-  .secondaryButton,
-  .ghostButton {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-.artistControls {
-  display: flex;
-  margin-top: 18px;
-}
-
-.artistCreateButton {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: 14px;
-  background: #111827;
-  color: white;
-  text-decoration: none;
-  font-weight: 700;
-}
-
-.portfolio {
-  margin-top: 24px;
-}
-
-.portfolioHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: end;
-  margin-bottom: 16px;
-}
-
-.portfolioHint {
-  font-size: 13px;
-  opacity: 0.62;
-}
-
-.portfolioGrid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.page {
-  padding: 28px 0 72px;
-}
-
-.profileCard {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
-  gap: 20px;
-  padding: 24px;
-  border-radius: 24px;
-  border: 1px solid rgba(128, 128, 128, 0.14);
-  background: white;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
-  align-items: center;
-}
-
-.avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 36px;
-  font-weight: 800;
-  color: #111827;
-  background: linear-gradient(135deg, rgba(17, 24, 39, 0.08), rgba(17, 24, 39, 0.03));
-  border: 1px solid rgba(128, 128, 128, 0.12);
-}
-
-.profileBody {
-  min-width: 0;
-}
-
-.profileTop {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: start;
-}
-
-.handle {
-  font-size: 14px;
-  opacity: 0.62;
-  margin-bottom: 6px;
-}
-
-.name {
-  margin: 0;
-  font-size: clamp(28px, 3vw, 40px);
-  line-height: 1.05;
-}
-
-.metaLine {
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.72;
-}
-
-.roleBadge {
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: rgba(17, 24, 39, 0.06);
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  opacity: 0.8;
+  color: var(--color-primary);
+  border: 1px solid rgba(59, 130, 246, 0.16);
 }
 
 .actions {
@@ -461,12 +96,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .primaryButton {
   border: 0;
-  background: #111827;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
   color: white;
+  box-shadow: 0 14px 30px rgba(59, 130, 246, 0.28);
+}
+
+.primaryButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(59, 130, 246, 0.35);
 }
 
 .primaryButton:disabled {
@@ -475,16 +117,20 @@
 }
 
 .secondaryButton {
-  border: 1px solid rgba(128, 128, 128, 0.22);
-  background: transparent;
-  color: inherit;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
+}
+
+.secondaryButton:hover {
+  transform: translateY(-2px);
 }
 
 .ghostButton {
   border: 0;
   background: transparent;
-  color: inherit;
-  opacity: 0.72;
+  color: var(--color-text-secondary);
 }
 
 .grid {
@@ -497,20 +143,23 @@
 .card {
   padding: 20px;
   border-radius: 24px;
-  border: 1px solid rgba(128, 128, 128, 0.14);
-  background: white;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .sectionTitle {
   margin: 0 0 14px;
   font-size: 18px;
+  color: var(--color-text);
+  font-weight: 800;
 }
 
 .bio {
   margin: 0;
   line-height: 1.6;
-  opacity: 0.88;
+  color: var(--color-text);
+  opacity: 0.9;
   white-space: pre-wrap;
 }
 
@@ -525,7 +174,7 @@
   gap: 12px;
   align-items: start;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.12);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .contactRow:last-child {
@@ -534,18 +183,19 @@
 }
 
 .contactRow span {
-  opacity: 0.62;
+  color: var(--color-text-secondary);
 }
 
 .contactRow strong {
   text-align: right;
   font-weight: 700;
   word-break: break-word;
+  color: var(--color-text);
 }
 
 .emptyText {
   margin: 0;
-  opacity: 0.7;
+  color: var(--color-text-secondary);
 }
 
 .artistControls {
@@ -555,8 +205,9 @@
 
 .artistCreateButton {
   border: 0;
-  background: #111827;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
   color: white;
+  box-shadow: 0 14px 30px rgba(59, 130, 246, 0.28);
 }
 
 .portfolio {
@@ -574,7 +225,7 @@
 .portfolioHint {
   margin: 6px 0 0;
   font-size: 13px;
-  opacity: 0.62;
+  color: var(--color-text-secondary);
 }
 
 .portfolioGrid {
@@ -584,11 +235,11 @@
 }
 
 .workCard {
-  border: 1px solid rgba(128, 128, 128, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: 22px;
-  background: white;
+  background: var(--color-surface);
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-soft);
 }
 
 .workPreview {
@@ -603,7 +254,7 @@
 .workImageWrap {
   border-radius: 18px;
   overflow: hidden;
-  background: #f3f4f6;
+  background: #F0F9FF;
   aspect-ratio: 1 / 1;
 }
 
@@ -629,24 +280,28 @@
 .workCategory {
   margin: 0;
   font-size: 13px;
-  opacity: 0.68;
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .workPrice {
   margin: 0;
   font-weight: 800;
+  color: var(--color-text);
 }
 
 .workTitle {
   margin: 0;
   font-size: 18px;
   line-height: 1.2;
+  color: var(--color-text);
+  font-weight: 800;
 }
 
 .workMeta {
   margin: 0;
   font-size: 13px;
-  opacity: 0.72;
+  color: var(--color-text-secondary);
 }
 
 .workActions {
@@ -656,15 +311,17 @@
 }
 
 .workEditButton {
-  border: 1px solid rgba(128, 128, 128, 0.22);
-  background: transparent;
-  color: inherit;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
 }
 
 .workDeleteButton {
   border: 0;
-  background: rgba(239, 68, 68, 0.1);
-  color: #b91c1c;
+  background: #111827;
+  color: white;
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.22);
 }
 
 .emptyPortfolio {
@@ -686,7 +343,7 @@
   width: min(640px, 100%);
   max-height: min(86vh, 900px);
   overflow: auto;
-  background: white;
+  background: var(--color-surface);
   border-radius: 24px;
   padding: 22px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
@@ -703,11 +360,13 @@
 .modalTitle {
   margin: 0;
   font-size: 22px;
+  color: var(--color-text);
+  font-weight: 800;
 }
 
 .modalSubtitle {
   margin: 8px 0 0;
-  opacity: 0.72;
+  color: var(--color-text-secondary);
 }
 
 .modalClose {
@@ -732,7 +391,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.62;
+  color: var(--color-primary);
 }
 
 .field {
@@ -740,6 +399,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .input,
@@ -748,10 +408,12 @@
   min-height: 46px;
   padding: 0 14px;
   border-radius: 14px;
-  border: 1px solid rgba(128, 128, 128, 0.22);
+  border: 1px solid var(--color-border);
   background: white;
   font: inherit;
   outline: none;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .textarea {
@@ -762,8 +424,8 @@
 
 .input:focus,
 .textarea:focus {
-  border-color: rgba(17, 24, 39, 0.42);
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.07);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .error {
