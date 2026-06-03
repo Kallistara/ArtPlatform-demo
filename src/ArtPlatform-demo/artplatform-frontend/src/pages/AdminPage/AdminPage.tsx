@@ -332,7 +332,7 @@ export function AdminPage() {
                       <div className={styles.artworkMain}>
                         <div className={styles.artworkTopRow}>
                           <strong className={styles.artworkTitle}>{artwork.title}</strong>
-                          <span className={styles.rolePill}>${artwork.price.toFixed(2)}</span>
+                          <span className={styles.rolePill}>{artwork.price.toFixed(2)} ₽</span>
                         </div>
 
                         <div className={styles.muted}>Artwork ID: {artwork.id}</div>
